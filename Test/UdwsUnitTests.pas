@@ -261,6 +261,7 @@ procedure TdwsUnitTestsContext.DeclareTestFuncs;
 var
    func : TdwsFunction;
    param : TdwsParameter;
+   vDefaultNil: IUnknown;
 begin
    func:=FUnit.Functions.Add;
    func.Name:='Func1';
@@ -383,7 +384,8 @@ begin
    param:=func.Parameters.Add;
    param.Name:='obj';
    param.DataType:='TObject';
-   param.DefaultValue:=IUnknown(nil);
+   vDefaultNil := nil;
+   param.DefaultValue:=vDefaultNil;
    func.OnEval:=FuncClassNameEval;
 
    func:=FUnit.Functions.Add;
@@ -1486,7 +1488,7 @@ begin
                   'FuncPoint call 2');
 
       funcInfo:=exec.Info.Func['Hello'];
-      CheckEquals('Hello world', funcInfo.Call(['world']).Value, 'Hello world');
+      CheckEquals('Hello world', funcInfo.Call([UnicodeString('world')]).Value, 'Hello world');
    finally
       exec.EndProgram;
    end;
