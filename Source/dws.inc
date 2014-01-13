@@ -60,6 +60,10 @@
 {$ELSE}
    {$mode delphi}
    {$DEFINE PUREPASCAL}
+   {$Hints OFF}
+   {$Warnings OFF}
+   {$A 4}
+   {$INLINE OFF}
 {$ENDIF}
 
 {.$DEFINE PUREPASCAL}

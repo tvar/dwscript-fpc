@@ -160,7 +160,9 @@ type
          property Symbol: TSymbol read FSymbol;
    end;
 
-   TSymbolPositionListList = class(TSortedList<TSymbolPositionList>)
+   TSymbolPositionListListBase = TSortedList<TSymbolPositionList>;
+
+   TSymbolPositionListList = class(TSymbolPositionListListBase)
       protected
          function Compare(const item1, item2 : TSymbolPositionList) : Integer; override;
    end;
@@ -692,6 +694,7 @@ type
          property TypAnyType: TAnyTypeSymbol read FBaseTypes.FTypAnyType;
    end;
 
+   TRefCountedObjectList = TObjectList<TRefCountedObject>;
    // A script main executable program
    TdwsMainProgram = class (TdwsProgram, IdwsProgram)
       private
@@ -723,7 +726,7 @@ type
          FTimeStamp : TDateTime;
          FCompileDuration : TDateTime;
          FCompiler : TObject;
-         FOrphanedObjects : TObjectList<TRefCountedObject>;
+         FOrphanedObjects : TRefCountedObjectList;
 
          FTypDefaultConstructor : TMethodSymbol;
          FTypDefaultDestructor : TMethodSymbol;
@@ -1027,7 +1030,7 @@ type
          procedure InitSymbol(symbol: TSymbol; const msgs : TdwsCompileMessageList);
          procedure InitExpression(Expr: TExprBase);
          procedure Call(exec : TdwsProgramExecution; func : TFuncSymbol);
-         function SubExpr(i : Integer) : TExprBase;
+         function SubExpr(i : Integer): TExprBase;
          function SubExprCount : Integer;
    end;
 
@@ -2061,6 +2064,7 @@ procedure TdwsProgramExecution.RunProgram(aTimeoutMilliSeconds : Integer);
       debugPos : TScriptPos;
       exceptObj : IScriptObj;
    begin
+      exceptObj := nil;
       EnterExceptionBlock(exceptObj);
       try
          if LastScriptError<>nil then begin
@@ -3082,7 +3086,7 @@ end;
 procedure TdwsMainProgram.OrphanObject(obj : TRefCountedObject);
 begin
    if FOrphanedObjects=nil then
-      FOrphanedObjects:=TObjectList<TRefCountedObject>.Create;
+      FOrphanedObjects:=TRefCountedObjectList.Create;
    FOrphanedObjects.Add(obj);
 end;
 
@@ -3470,7 +3474,7 @@ end;
 //
 class procedure TdwsGuardianThread.Initialize;
 begin
-   vThread:=TdwsGuardianThread.Create;
+   vThread:=TdwsGuardianThread.Create();
    vThread.Start;
 end;
 
@@ -8063,7 +8067,7 @@ end;
 //
 function TExternalFuncHandler.SubExpr(i : Integer) : TExprBase;
 begin
-   Result:=nil;
+  Result:=nil;
 end;
 
 // SubExprCount
@@ -8165,4 +8169,4 @@ finalization
    TdwsGuardianThread.Finalize;
    TdwsGuardianThread.vExecutionsPool.FreeAll;
 
-end.
+end.

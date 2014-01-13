@@ -711,7 +711,7 @@ end;
 procedure TdwsJSONParserState.ParseStringArray(dest : TStringList);
 var
    c : Char;
-   buf : String;
+   buf : UnicodeString;
 begin
    c:=SkipBlanks(' ');
    if c<>'[' then

@@ -1,0 +1,227 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="dwsLibRuntime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <IncludeFiles Value="../Source"/>
+        <OtherUnitFiles Value="../Source;../Libraries/ClassesLib;../Libraries/asmLib;../Libraries/SymbolsLib"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Parsing>
+        <Style Value="1"/>
+        <SyntaxOptions>
+          <SyntaxMode Value="Delphi"/>
+          <IncludeAssertionCode Value="True"/>
+        </SyntaxOptions>
+      </Parsing>
+      <CodeGeneration>
+        <Optimizations>
+          <OptimizationLevel Value="2"/>
+        </Optimizations>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <UseExternalDbgSyms Value="True"/>
+        </Debugging>
+      </Linking>
+      <Other>
+        <CompilerMessages>
+          <MsgFileName Value=""/>
+        </CompilerMessages>
+        <CompilerPath Value="$(CompPath)"/>
+        <CreateMakefileOnBuild Value="True"/>
+      </Other>
+    </CompilerOptions>
+    <Files Count="43">
+      <Item1>
+        <Filename Value="../Source/dwsStrings.pas"/>
+        <UnitName Value="dwsStrings"/>
+      </Item1>
+      <Item2>
+        <Filename Value="../Source/dwsSymbols.pas"/>
+        <UnitName Value="dwsSymbols"/>
+      </Item2>
+      <Item3>
+        <Filename Value="../Source/dwsUnitSymbols.pas"/>
+        <UnitName Value="dwsUnitSymbols"/>
+      </Item3>
+      <Item4>
+        <Filename Value="../Source/dwsTimeFunctions.pas"/>
+        <UnitName Value="dwsTimeFunctions"/>
+      </Item4>
+      <Item5>
+        <Filename Value="../Source/dwsTokenizer.pas"/>
+        <UnitName Value="dwsTokenizer"/>
+      </Item5>
+      <Item6>
+        <Filename Value="../Source/dwsVariantFunctions.pas"/>
+        <UnitName Value="dwsVariantFunctions"/>
+      </Item6>
+      <Item7>
+        <Filename Value="../Source/dwsComp.pas"/>
+        <UnitName Value="dwsComp"/>
+      </Item7>
+      <Item8>
+        <Filename Value="../Source/dwsCompiler.pas"/>
+        <UnitName Value="dwsCompiler"/>
+      </Item8>
+      <Item9>
+        <Filename Value="../Source/dwsDebugger.pas"/>
+        <UnitName Value="dwsDebugger"/>
+      </Item9>
+      <Item10>
+        <Filename Value="../Source/dwsErrors.pas"/>
+        <UnitName Value="dwsErrors"/>
+      </Item10>
+      <Item11>
+        <Filename Value="../Source/dwsCompilerUtils.pas"/>
+        <UnitName Value="dwsCompilerUtils"/>
+      </Item11>
+      <Item12>
+        <Filename Value="../Source/dwsConnectorExprs.pas"/>
+        <UnitName Value="dwsConnectorExprs"/>
+      </Item12>
+      <Item13>
+        <Filename Value="../Source/dwsConstExprs.pas"/>
+        <UnitName Value="dwsConstExprs"/>
+      </Item13>
+      <Item14>
+        <Filename Value="../Source/dwsConvExprs.pas"/>
+        <UnitName Value="dwsConvExprs"/>
+      </Item14>
+      <Item15>
+        <Filename Value="../Source/dwsCoreExprs.pas"/>
+        <UnitName Value="dwsCoreExprs"/>
+      </Item15>
+      <Item16>
+        <Filename Value="../Source/dwsDataContext.pas"/>
+        <UnitName Value="dwsDataContext"/>
+      </Item16>
+      <Item17>
+        <Filename Value="../Source/dwsExprList.pas"/>
+        <UnitName Value="dwsExprList"/>
+      </Item17>
+      <Item18>
+        <Filename Value="../Source/dwsExprs.pas"/>
+        <UnitName Value="dwsExprs"/>
+      </Item18>
+      <Item19>
+        <Filename Value="../Source/dwsFileSystem.pas"/>
+        <UnitName Value="dwsFileSystem"/>
+      </Item19>
+      <Item20>
+        <Filename Value="../Source/dwsFunctions.pas"/>
+        <UnitName Value="dwsFunctions"/>
+      </Item20>
+      <Item21>
+        <Filename Value="../Source/dwsGlobalVarsFunctions.pas"/>
+        <UnitName Value="dwsGlobalVarsFunctions"/>
+      </Item21>
+      <Item22>
+        <Filename Value="../Source/dwsHtmlFilter.pas"/>
+        <UnitName Value="dwsHtmlFilter"/>
+      </Item22>
+      <Item23>
+        <Filename Value="../Source/dwsInfo.pas"/>
+        <UnitName Value="dwsInfo"/>
+      </Item23>
+      <Item24>
+        <Filename Value="../Source/dwsJSON.pas"/>
+        <UnitName Value="dwsJSON"/>
+      </Item24>
+      <Item25>
+        <Filename Value="../Source/dwsLanguageExtension.pas"/>
+        <UnitName Value="dwsLanguageExtension"/>
+      </Item25>
+      <Item26>
+        <Filename Value="../Source/dwsMagicExprs.pas"/>
+        <UnitName Value="dwsMagicExprs"/>
+      </Item26>
+      <Item27>
+        <Filename Value="../Source/dwsMathFunctions.pas"/>
+        <UnitName Value="dwsMathFunctions"/>
+      </Item27>
+      <Item28>
+        <Filename Value="../Source/dwsMethodExprs.pas"/>
+        <UnitName Value="dwsMethodExprs"/>
+      </Item28>
+      <Item29>
+        <Filename Value="../Source/dwsOperators.pas"/>
+        <UnitName Value="dwsOperators"/>
+      </Item29>
+      <Item30>
+        <Filename Value="../Source/dwsPascalTokenizer.pas"/>
+        <UnitName Value="dwsPascalTokenizer"/>
+      </Item30>
+      <Item31>
+        <Filename Value="../Source/dwsRelExprs.pas"/>
+        <UnitName Value="dwsRelExprs"/>
+      </Item31>
+      <Item32>
+        <Filename Value="../Source/dwsStack.pas"/>
+        <UnitName Value="dwsStack"/>
+      </Item32>
+      <Item33>
+        <Filename Value="../Source/dwsStringFunctions.pas"/>
+        <UnitName Value="dwsStringFunctions"/>
+      </Item33>
+      <Item34>
+        <Filename Value="../Source/dwsStringResult.pas"/>
+        <UnitName Value="dwsStringResult"/>
+      </Item34>
+      <Item35>
+        <Filename Value="../Source/dwsSystemOperators.pas"/>
+        <UnitName Value="dwsSystemOperators"/>
+      </Item35>
+      <Item36>
+        <Filename Value="../Source/dwsUtils.pas"/>
+        <UnitName Value="dwsUtils"/>
+      </Item36>
+      <Item37>
+        <Filename Value="../Source/dwsXPlatform.pas"/>
+        <UnitName Value="dwsXPlatform"/>
+      </Item37>
+      <Item38>
+        <Filename Value="../Source/dwsXPlatformUI.pas"/>
+        <UnitName Value="dwsXPlatformUI"/>
+      </Item38>
+      <Item39>
+        <Filename Value="../Libraries/ClassesLib/dwsClasses.pas"/>
+        <UnitName Value="dwsClasses"/>
+      </Item39>
+      <Item40>
+        <Filename Value="../Libraries/ClassesLib/dwsHashtables.pas"/>
+        <UnitName Value="dwsHashtables"/>
+      </Item40>
+      <Item41>
+        <Filename Value="../Libraries/ClassesLib/dwsClassesLibModule.pas"/>
+        <UnitName Value="dwsClassesLibModule"/>
+      </Item41>
+      <Item42>
+        <Filename Value="../Libraries/asmLib/dwsAsmLibModule.pas"/>
+        <UnitName Value="dwsAsmLibModule"/>
+      </Item42>
+      <Item43>
+        <Filename Value="../Libraries/SymbolsLib/dwsSymbolsLibModule.pas"/>
+        <UnitName Value="dwsSymbolsLibModule"/>
+      </Item43>
+    </Files>
+    <Type Value="RunTimeOnly"/>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

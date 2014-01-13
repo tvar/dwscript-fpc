@@ -525,8 +525,11 @@ var
    varData : PVarData;
 begin
    varData:=@FBaseData[destAddr];
-   Assert(varData.VType=varUString);
-   UnicodeString(varData.VString):=UnicodeString(varData.VString)+value
+   case varData.VType of
+     varUString: UnicodeString(varData.VString):=UnicodeString(varData.VString)+value;
+     varolestr: Variant(varData^) := varData.volestr + value
+     else Assert(False);
+   end;
 end;
 
 // WriteData
@@ -659,4 +662,4 @@ begin
    Result:=True;
 end;
 
-end.
+end.

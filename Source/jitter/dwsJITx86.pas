@@ -26,7 +26,7 @@ interface
 
 
 uses
-   Classes, SysUtils, Math, Windows,
+   Classes, SysUtils, Math, {$IFDEF WINDOWS} Windows, {$ENDIF}
    dwsExprs, dwsSymbols, dwsErrors, dwsUtils, dwsExprList, dwsXPlatform,
    dwsCoreExprs, dwsRelExprs, dwsMagicExprs, dwsConstExprs,
    dwsMathFunctions, dwsDataContext, dwsConvExprs, dwsSetOfExprs, dwsMethodExprs,
@@ -669,12 +669,19 @@ begin
 {$endif}
 end;
 
+
+function locPower(const base, exponent: Double) : Double;
+begin
+  Result := Math.power(base, exponent);
+end;
+
 var
    vAddr_Exp : function (const v : Double) : Double = double_exp;
    vAddr_Ln : function (const v : Double) : Double = double_ln;
    vAddr_Log2 : function (const v : Double) : Double = double_log2;
    vAddr_Log10 : function (const v : Double) : Double = double_log10;
-   vAddr_Power : function (const base, exponent: Double) : Double = Math.Power;
+
+   vAddr_Power : function (const base, exponent: Double) : Double = locPower;
    vAddr_Trunc : function (const v : Double) : Int64 = double_trunc;
    vAddr_Frac : function (const v : Double) : Double = double_frac;
    vAddr_div : function (a, b : Int64) : Int64 = int64_div;
@@ -694,17 +701,28 @@ var
 // Create
 //
 constructor TdwsJITx86.Create;
+  function CreateBytes(const Value: array of Byte): TBytes;
+  var
+    vLen: Integer;
+  begin
+    vLen := Length(Value);
+    SetLength(Result, vLen);
+    if vLen > 0 then
+      Move(Value[0], Result[0], vLen);
+  end;
+var
+  vInc: TdwsJITter;
 begin
    inherited;
 
    FAllocator:=TdwsJITAllocatorWin.Create;
 
-   FAbsMaskPD:=FAllocator.Allocate(TBytes.Create($FF, $FF, $FF, $FF, $FF, $FF, $FF, $7F,
-                                                 $FF, $FF, $FF, $FF, $FF, $FF, $FF, $7F));
-   FSignMaskPD:=FAllocator.Allocate(TBytes.Create($00, $00, $00, $00, $00, $00, $00, $80,
-                                                  $00, $00, $00, $00, $00, $00, $00, $80));
-   FBufferBlock:=FAllocator.Allocate(TBytes.Create($66, $66, $66, $90, $66, $66, $66, $90,
-                                                   $66, $66, $66, $90, $66, $66, $66, $90));
+   FAbsMaskPD:=FAllocator.Allocate(CreateBytes([$FF, $FF, $FF, $FF, $FF, $FF, $FF, $7F,
+                                                 $FF, $FF, $FF, $FF, $FF, $FF, $FF, $7F]));
+   FSignMaskPD:=FAllocator.Allocate(CreateBytes([$00, $00, $00, $00, $00, $00, $00, $80,
+                                                  $00, $00, $00, $00, $00, $00, $00, $80]));
+   FBufferBlock:=FAllocator.Allocate(CreateBytes([$66, $66, $66, $90, $66, $66, $66, $90,
+                                                   $66, $66, $66, $90, $66, $66, $66, $90]));
 
    FHint32bitSymbol:=TObjectsLookup.Create;
 
@@ -1773,9 +1791,15 @@ end;
 // EvalNoResult
 //
 procedure TProgramExpr86.EvalNoResult(exec : TdwsExecution);
+{$IFDEF CPU64}
+asm
+  jmp [rdi+FCode]
+end;
+{$ELSE}
 asm
    jmp [eax+FCode]
 end;
+{$ENDIF}
 
 // ------------------
 // ------------------ TFloatExpr86 ------------------
@@ -1784,9 +1808,15 @@ end;
 // EvalAsFloat
 //
 function TFloatExpr86.EvalAsFloat(exec : TdwsExecution) : Double;
+{$IFDEF CPU64}
+asm
+   jmp [rdi+FCode]
+end;
+{$ELSE}
 asm
    jmp [eax+FCode]
 end;
+{$ENDIF}
 
 // ------------------
 // ------------------ TIntegerExpr86 ------------------
@@ -1795,9 +1825,15 @@ end;
 // EvalAsInteger
 //
 function TIntegerExpr86.EvalAsInteger(exec : TdwsExecution) : Int64;
+{$IFDEF CPU64}
+asm
+   jmp [rdi+FCode]
+end;
+{$ELSE}
 asm
    jmp [eax+FCode]
 end;
+{$ENDIF}
 
 // ------------------
 // ------------------ Tx86AssignConstToFloatVar ------------------
@@ -1883,18 +1919,16 @@ var
 begin
    e:=TAssignExpr(expr);
 
-   if jit.IsFloat(e.Left) then begin
-
+   if jit.IsFloat(e.Left) then
+   begin
       reg:=jit.CompileFloat(e.Right);
       jit.CompileAssignFloat(e.Left, reg);
-
-   end else if jit.IsInteger(e.Left) then begin
-
+   end else if jit.IsInteger(e.Left) then
+   begin
       jit.CompileInteger(e.Right);
       jit.CompileAssignInteger(e.Left, 0);
-
-   end else if jit.IsBoolean(e.Left) then begin
-
+   end else if jit.IsBoolean(e.Left) then
+   begin
       jit.CompileBooleanValue(e.Right);
       jit.CompileAssignBoolean(e.Left, 0);
 
@@ -1999,7 +2033,8 @@ var
    i : Integer;
    subExpr : TExprBase;
 begin
-   for i:=0 to expr.SubExprCount-1 do begin
+   for i:=0 to expr.SubExprCount-1 do
+   begin
       if jit.OutputFailedOn<>nil then break;
       subExpr:=expr.SubExpr[i];
       jit._DoStep(subExpr);
@@ -4665,4 +4700,4 @@ begin
    Result:=0;
 end;
 
-end.
+end.

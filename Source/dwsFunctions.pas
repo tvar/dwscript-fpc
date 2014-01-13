@@ -164,9 +164,9 @@ type
 
       protected
          procedure SetStaticSymbols(const Value: Boolean);
-         function _AddRef : Integer; stdcall;
-         function _Release : Integer; stdcall;
-         function QueryInterface({$ifdef FPC}constref{$else}const{$endif} IID: TGUID; out Obj): HResult; stdcall;
+         function _AddRef : Integer;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function _Release : Integer;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function QueryInterface({$ifdef FPC}constref{$else}const{$endif} IID: TGUID; out Obj): HResult;{$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
          function GetDependencies : TStrings;
          function GetUnitName : UnicodeString;
          function GetDeprecatedMessage : UnicodeString;
@@ -1001,4 +1001,4 @@ finalization
    vInternalUnit.Free;
    vInternalUnit:=nil;
 
-end.
+end.

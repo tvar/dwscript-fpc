@@ -195,6 +195,7 @@ type
          procedure RaiseObjectNotInstantiated(exec : TdwsExecution);
          procedure RaiseObjectAlreadyDestroyed(exec : TdwsExecution);
    end;
+   TExprBaseStack = TSimpleStack<TExprBase>;
 
    TExprBaseClass = class of TExprBase;
 
@@ -384,6 +385,8 @@ type
             end;
          function GetEnumerator : TSymbolTableEnumerator;
    end;
+   TSymbolTableStack = TSimpleStack<TSymbolTable>;
+   TSymbolTableHash = TSimpleObjectHash<TSymbolTable>;
 
    TSymbolTableClass = class of TSymbolTable;
 
@@ -1671,6 +1674,7 @@ type
          property WriteFunc : TFuncSymbol read GetWriteFunc write FWriteFunc;
    end;
 
+   TVariantStack = TSimpleStack<Variant>;
    // TdwsExecution
    //
    TdwsExecution = class abstract (TInterfacedSelfObject, IdwsExecution)
@@ -1691,7 +1695,7 @@ type
          FExternalObject : TObject;
          FUserObject : TObject;
 
-         FExceptionObjectStack : TSimpleStack<Variant>;
+         FExceptionObjectStack : TVariantStack;
          FLastScriptError : TExprBase;
          FLastScriptCallStack : TdwsExprLocationArray;
 
@@ -1746,7 +1750,7 @@ type
 
          property LastScriptError : TExprBase read FLastScriptError;
          property LastScriptCallStack : TdwsExprLocationArray read FLastScriptCallStack;
-         property ExceptionObjectStack : TSimpleStack<Variant> read FExceptionObjectStack;
+         property ExceptionObjectStack : TVariantStack read FExceptionObjectStack;
 
          procedure EnterExceptionBlock(var exceptObj : IScriptObj); virtual;
          procedure LeaveExceptionBlock;
@@ -1883,10 +1887,10 @@ var
    i : Integer;
    abort : Boolean;
    base, expr : TExprBase;
-   stack : TSimpleStack<TExprBase>;
+   stack : TExprBaseStack;
 begin
    if Self=nil then Exit(False);
-   stack:=TSimpleStack<TExprBase>.Create;
+   stack:=TExprBaseStack.Create;
    try
       abort:=False;
       stack.Push(Self);
@@ -5315,12 +5319,12 @@ function TSymbolTable.EnumerateSymbolsOfNameInScope(const aName : UnicodeString;
                         const callback : TSymbolEnumerationCallback) : Boolean;
 var
    i : Integer;
-   visitedTables : TSimpleObjectHash<TSymbolTable>;
-   tableStack : TSimpleStack<TSymbolTable>;
+   visitedTables : TSymbolTableHash;
+   tableStack : TSymbolTableStack;
    current : TSymbolTable;
 begin
-   visitedTables:=TSimpleObjectHash<TSymbolTable>.Create;
-   tableStack:=TSimpleStack<TSymbolTable>.Create;
+   visitedTables:=TSymbolTableHash.Create;
+   tableStack:=TSymbolTableStack.Create;
    try
       tableStack.Push(Self);
       while tableStack.Count>0 do begin
@@ -7094,4 +7098,4 @@ begin
 end;
 
 
-end.
+end.

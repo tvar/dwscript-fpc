@@ -314,7 +314,7 @@ var
 begin
    for i:=0 to FPaths.Count-1 do begin
       path:=FPaths[i];
-      if StrContains(fileName, ':') then
+      if StrContains(fileName, WideChar(':')) then
          Result:=ExpandFileName(fileName)
       else Result:=ExpandFileName(path+fileName);
       if StrIBeginsWith(Result, path) then Exit;
@@ -371,4 +371,4 @@ begin
    FPaths.Assign(val);
 end;
 
-end.
+end.

@@ -100,6 +100,8 @@ type
    end;
    PDataPtrPool= ^TDataContextPool;
 
+   { TDataContext }
+
    TDataContext = class(TInterfacedObject, IDataContext)
       private
          FAddr : Integer;
@@ -123,13 +125,13 @@ type
          function GetAsInterface(addr : Integer) : IUnknown; inline;
          procedure SetAsInterface(addr : Integer; const value : IUnknown); inline;
 
-         function _AddRef: Integer; stdcall;
-         function _Release: Integer; stdcall;
-
+         function _AddRef: Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function _Release: Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
       protected
          property DirectData : TData read FData;
 
       public
+         destructor Destroy; override;
          function GetSelf : TObject;
 
          property AsVariant[addr : Integer] : Variant read GetAsVariant write SetAsVariant; default;
@@ -328,18 +330,23 @@ end;
 
 // _AddRef
 //
-function TDataContext._AddRef: Integer;
+function TDataContext._AddRef: Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 begin
    Result := InterlockedIncrement(FRefCount);
 end;
 
 // _Release
 //
-function TDataContext._Release: Integer;
+function TDataContext._Release: Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 begin
    Result := InterlockedDecrement(FRefCount);
    if Result = 0 then
       FPool.Push(Self);
+end;
+
+destructor TDataContext.Destroy;
+begin
+  inherited Destroy;
 end;
 
 // GetSelf

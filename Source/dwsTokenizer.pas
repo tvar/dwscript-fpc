@@ -172,10 +172,11 @@ type
    TSwitchHandler = function(const switchName : UnicodeString) : Boolean of object;
 
    TTokenizer = class;
+   TStateList = TObjectList<TState>;
 
    TTokenizerRules = class
-      private
-         FStates : TObjectList<TState>;
+      private var
+         FStates : TStateList;
          FEOFTransition : TErrorTransition;
          FReservedNames : TTokenTypes;
          FSymbolTokens : TTokenTypes;
@@ -217,6 +218,8 @@ type
 
    TTokenizerEndSourceFileEvent = procedure (sourceFile : TSourceFile) of object;
 
+   TTokenizerConditionalInfoStack = TSimpleStack<TTokenizerConditionalInfo>;
+
    TTokenizer = class
       private
          FTokenBuf : TTokenBuffer;
@@ -229,7 +232,7 @@ type
          FSwitchProcessor : TSwitchHandler;
          FMsgs : TdwsCompileMessageList;
          FConditionalDefines : IAutoStrings;
-         FConditionalDepth : TSimpleStack<TTokenizerConditionalInfo>;
+         FConditionalDepth : TTokenizerConditionalInfoStack;
 
          FTokenPool : TToken;
 
@@ -284,7 +287,7 @@ type
          property HotPos : TScriptPos read FSource.FHotPos;
          property CurrentPos : TScriptPos read FSource.FCurPos;
 
-         property ConditionalDepth : TSimpleStack<TTokenizerConditionalInfo> read FConditionalDepth;
+         property ConditionalDepth : TTokenizerConditionalInfoStack read FConditionalDepth;
          property Rules : TTokenizerRules read FRules;
 
          property SwitchHandler : TSwitchHandler read FSwitchHandler write FSwitchHandler;
@@ -1025,7 +1028,7 @@ begin
    FStartState := FRules.StartState;
    FTokenBuf.CaseSensitive := rules.CaseSensitive;
 
-   FConditionalDepth:=TSimpleStack<TTokenizerConditionalInfo>.Create;
+   FConditionalDepth:=TTokenizerConditionalInfoStack.Create;
 end;
 
 // Destroy
@@ -1614,7 +1617,7 @@ end;
 //
 constructor TTokenizerRules.Create;
 begin
-   FStates:=TObjectList<TState>.Create;
+   FStates:=TStateList.Create;
 end;
 
 // Destroy

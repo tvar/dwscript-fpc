@@ -24,7 +24,7 @@ unit dwsSymbolsLibModule;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, dwsComp, dwsExprs, dwsUtils,
+  {$IFDEF WINDOWS}Windows,{$ENDIF} Messages, SysUtils, Classes, dwsComp, dwsExprs, dwsUtils,
   dwsUnitSymbols;
 
 type
@@ -61,7 +61,7 @@ var
 
 implementation
 
-{$R *.DFM}
+{$R *.dfm}
 
 uses
   dwsSymbols;
@@ -364,4 +364,4 @@ begin
     TSymbols.Create(TFuncSymbol(sym).Params)).Call.Value
 end;
 
-end.
+end.

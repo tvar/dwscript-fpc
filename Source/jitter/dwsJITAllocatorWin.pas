@@ -19,7 +19,7 @@ unit dwsJITAllocatorWin;
 interface
 
 uses
-   Windows, Classes, SysUtils,
+   {$IFDEF WINDOWS} Windows, {$ELSE} cmem, {$ENDIF} Classes, SysUtils,
    dwsUtils, dwsXPlatform, dwsJIT;
 
 const
@@ -85,7 +85,11 @@ constructor TdwsJITCodeSubAllocator.Create(aSize : Integer);
 begin
    FBlockSize:=aSize;
    FRemaining:=aSize;
+   {$IFDEF WINDOWS}
    FBlock:=VirtualAlloc(nil, aSize, MEM_COMMIT, PAGE_READWRITE);
+   {$ELSE}
+   FBlock := Malloc(aSize);
+   {$ENDIF}
    FCurrent:=FBlock;
 end;
 
@@ -94,7 +98,11 @@ end;
 destructor TdwsJITCodeSubAllocator.Destroy;
 begin
    inherited;
+   {$IFDEF WINDOWS}
    VirtualFree(FBlock, 0, MEM_RELEASE);
+   {$ELSE}
+   cmem.Free(FBlock);
+   {$ENDIF}
 end;
 
 // Allocate
@@ -124,7 +132,9 @@ begin
    // pad a small range with nops after last code
    FillChar(FCurrent^, n, $90);
    FRemaining:=0;
+   {$IFDEF WINDOWS}
    VirtualProtect(FBlock, FBlockSize, PAGE_EXECUTE_READWRITE, @oldProtect);
+   {$ENDIF}
 end;
 
 // ------------------
@@ -196,4 +206,4 @@ begin
    end;
 end;
 
-end.
+end.

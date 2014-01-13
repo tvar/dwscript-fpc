@@ -1,8 +1,8 @@
 unit dwsClasses;
 
 interface
-
-uses Windows, SysUtils, Classes;
+{$i ..\Source\dws.inc}
+uses {$IFDEF WINDOWS} Windows, {$ENDIF} SysUtils, Classes;
 
 type
 
@@ -150,11 +150,18 @@ type
 
 implementation
 
-{$IFDEF MSWINDOWS}
+{$IFDEF WINDOWS}
 uses RTLConsts, Types;
 {$ENDIF}
 {$IFDEF LINUX}
 uses RTLConsts, SysConst;
+{$ENDIF}
+
+{$IFNDEF UNICODE}
+function CharInSet(aChar: Char; aSet: TSysCharSet): boolean;
+begin
+  Result := aChar in aSet;
+end;
 {$ENDIF}
 
 { TdwsStrings }
@@ -256,10 +263,15 @@ end;
 procedure TdwsStrings.Error(const Msg: UnicodeString; Data: Integer);
 
   function ReturnAddr: Pointer;
+  {$IFDEF CPU64}
+  begin
+    Assert(False);
+  end;
+  {$ELSE}
   asm
           MOV     EAX,[EBP+4]
   end;
-
+  {$ENDIF}
 begin
   raise EStringListError.CreateFmt(Msg, [Data]) at ReturnAddr;
 end;
@@ -340,7 +352,7 @@ begin
       S := Get(I);
       P := PChar(S);
       while not CharInSet(P^, [#0..' ', QuoteChar, Delimiter]) do
-      {$IFDEF MSWINDOWS}
+      {$IFDEF WINDOWS}
         P := CharNext(P);
       {$ELSE}
         Inc(P);
@@ -577,7 +589,7 @@ begin
     Clear;
     P := PChar(Value);
     while CharInSet(P^, [#1..' ']) do
-    {$IFDEF MSWINDOWS}
+    {$IFDEF WINDOWS}
       P := CharNext(P);
     {$ELSE}
       Inc(P);
@@ -590,7 +602,7 @@ begin
       begin
         P1 := P;
         while (P^ > ' ') and (P^ <> Delimiter) do
-        {$IFDEF MSWINDOWS}
+        {$IFDEF WINDOWS}
           P := CharNext(P);
         {$ELSE}
           Inc(P);
@@ -599,7 +611,7 @@ begin
       end;
       Add(S);
       while CharInSet(P^, [#1..' ']) do
-      {$IFDEF MSWINDOWS}
+      {$IFDEF WINDOWS}
         P := CharNext(P);
       {$ELSE}
         Inc(P);
@@ -607,7 +619,7 @@ begin
       if P^ = Delimiter then
       begin
         P1 := P;
-        {$IFDEF MSWINDOWS}
+        {$IFDEF WINDOWS}
         if CharNext(P1)^ = #0 then
         {$ELSE}
         Inc(P1);
@@ -615,7 +627,7 @@ begin
         {$ENDIF}
           Add('');
         repeat
-          {$IFDEF MSWINDOWS}
+          {$IFDEF WINDOWS}
           P := CharNext(P);
           {$ELSE}
           Inc(P);
@@ -944,4 +956,4 @@ begin
   end;
 end;
 
-end.
+end.

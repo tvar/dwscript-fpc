@@ -372,6 +372,10 @@ type
       function ReadExpr(expecting : TTypeSymbol = nil) : TTypedExpr;
    end;
 
+   TProgramExprStack = TSimpleStack<TProgramExpr>;
+   TLoopExitableStack = TSimpleStack<TLoopExitable>;
+   TBooleanStack = TSimpleStack<Boolean>;
+   TUnicodeStringStack = TSimpleStack<UnicodeString>;
    // TdwsCompiler
    //
    TSimpleObjectObjectHash_TDataSymbol_TVarExpr = TSimpleObjectObjectHash<TDataSymbol,TVarExpr>;
@@ -385,9 +389,9 @@ type
          FSourceContextMap : TdwsSourceContextMap;
          FSymbolDictionary : TdwsSymbolDictionary;
          FOperators : TOperators;
-         FLoopExprs : TSimpleStack<TProgramExpr>;
-         FLoopExitable : TSimpleStack<TLoopExitable>;
-         FFinallyExprs : TSimpleStack<Boolean>;
+         FLoopExprs : TProgramExprStack;
+         FLoopExitable : TLoopExitableStack;
+         FFinallyExprs : TBooleanStack;
          FMsgs : TdwsCompileMessageList;
          FDefaultHintsLevel : TdwsHintsLevel;
 
@@ -407,7 +411,7 @@ type
          FSourcePostConditionsIndex : Integer;
          FUnitSection : TdwsUnitSection;
          FUnitContextStack : TdwsCompilerUnitContextStack;
-         FUnitsFromStack : TSimpleStack<UnicodeString>;
+         FUnitsFromStack : TUnicodeStringStack;
          FCurrentSourceUnit : TSourceUnit;
          FCurrentUnitSymbol : TUnitMainSymbol;
          FCurrentStructure : TCompositeTypeSymbol;
@@ -1180,10 +1184,10 @@ begin
 
    FTokRules:=TPascalTokenizerStateRules.Create;
 
-   FLoopExprs:=TSimpleStack<TProgramExpr>.Create;
-   FLoopExitable:=TSimpleStack<TLoopExitable>.Create;
-   FFinallyExprs:=TSimpleStack<Boolean>.Create;
-   FUnitsFromStack:=TSimpleStack<UnicodeString>.Create;
+   FLoopExprs:=TProgramExprStack.Create;
+   FLoopExitable:=TLoopExitableStack.Create;
+   FFinallyExprs:=TBooleanStack.Create;
+   FUnitsFromStack:=TUnicodeStringStack.Create;
    FUnitContextStack:=TdwsCompilerUnitContextStack.Create;
 
    FAnyFuncSymbol:=TAnyFuncSymbol.Create('', fkFunction, 0);
@@ -13668,4 +13672,4 @@ end;
 end.
 // D2009: if you after a build get:
 // [DCC Fatal Error] dwsCompiler.pas: F2051 Unit dwsCompiler was compiled with a different version of dwsUtils.TSimpleObjectObjectHash`2.GetItemHashCode
-// Just do a re-compile, and it should go away... - HV
+// Just do a re-compile, and it should go away... - HV

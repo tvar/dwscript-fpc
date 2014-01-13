@@ -37,7 +37,7 @@ unit dwsGlobalVarsFunctions;
 interface
 
 uses
-   Variants, Windows, Classes, SysUtils, Masks,
+   Variants, {$IFDEF WINDOWS} Windows, {$ENDIF} Classes, SysUtils, Masks,
    dwsXPlatform, dwsUtils, dwsStrings, dwsExprList, dwsConstExprs,
    dwsFunctions, dwsExprs, dwsSymbols, dwsMagicExprs;
 
@@ -1037,4 +1037,4 @@ finalization
    vGlobalQueues.Free;
    vGlobalQueues:=nil;
   
-end.
+end.

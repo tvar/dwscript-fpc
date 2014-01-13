@@ -21,7 +21,8 @@ unit dwsRTTIConnector;
 interface
 
 uses
-   Windows, Forms, Variants, Classes, SysUtils, SysConst, TypInfo, RTTI,
+   {$IFDEF WINDOWS} Windows, {$ENDIF} Forms, Variants, Classes, SysUtils, SysConst, TypInfo,
+   {$IFNDEF FPC} RTTI, {$ENDIF}
    dwsComp, dwsSymbols, dwsDataContext, dwsErrors,
    dwsExprs, dwsStrings, dwsFunctions, dwsStack, dwsOperators,
    dwsUtils, dwsLanguageExtension, dwsCompiler;
@@ -32,14 +33,18 @@ const
    SYS_RTTIVARIANT = 'RttiVariant';
 
 type
+   {$IFDEF FPC}
+   {$ERROR FPC does not support RTTI};
+   {$ENDIF}
+
    TdwsRTTIConnector = class(TdwsAbstractStaticUnit, IUnknown, IConnector)
       private
-         function ConnectorCaption : String;
-         function ConnectorName : String;
-         function GetUnit(const UnitName : String) : IConnectorType;
+         function ConnectorCaption : UnicodeString;
+         function ConnectorName : UnicodeString;
+         function GetUnit(const UnitName : UnicodeString) : IConnectorType;
 
       protected
-         function GetUnitName : String; override;
+         function GetUnitName : UnicodeString; override;
          procedure AddUnitSymbols(table : TSymbolTable; operators : TOperators); override;
 
       published

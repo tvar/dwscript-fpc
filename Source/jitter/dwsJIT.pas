@@ -43,7 +43,7 @@ type
       public
          constructor Create(aJIT : TdwsJIT);
 
-         function IncRefCount : TdwsJITter; inline;
+         function IncRefCount : TdwsJITter; {inline;}
 
          procedure CompileStatement(expr : TExprBase); virtual;
 
@@ -68,8 +68,9 @@ type
 
          destructor Destroy; override;
    end;
+   TdwsRegisteredJITterListBase = TSortedList<TdwsRegisteredJITter>;
 
-   TdwsRegisteredJITterList = class(TSortedList<TdwsRegisteredJITter>)
+   TdwsRegisteredJITterList = class(TdwsRegisteredJITterListBase)
       protected
          function Compare(const item1, item2 : TdwsRegisteredJITter) : Integer; override;
    end;
@@ -151,13 +152,16 @@ type
          Prev : TJITLoopContext;
    end;
 
+   TSymbolHash = TSimpleObjectHash<TSymbol>;
+
    TdwsJIT = class
-      private
+      public
          FRegistered : TdwsRegisteredJITterList;
+      private
          FTempReg : TdwsRegisteredJITter;
          FOutput : TWriteOnlyBlockStream;
          FOutputFailedOn : TExprBase;
-         FSeenByGreedy : TSimpleObjectHash<TSymbol>;
+         FSeenByGreedy : TSymbolHash;
          FQueuedGreed : TQueuedJITGreed;
 
          FFixups : TFixupLogic;
@@ -389,7 +393,7 @@ begin
    FRegistered:=TdwsRegisteredJITterList.Create;
    FTempReg:=TdwsRegisteredJITter.Create;
    FOutput:=CreateOutput;
-   FSeenByGreedy:=TSimpleObjectHash<TSymbol>.Create;
+   FSeenByGreedy:=TSymbolHash.Create;
 
    FFixups:=CreateFixupLogic;
    FFixups.OnNeedLocation:=GetLocation;
@@ -459,7 +463,8 @@ end;
 //
 function TdwsJIT.FindJITter(expr : TExprBase) : TdwsJITter;
 begin
-   Result:=FindJITter(expr.ClassType);
+   Assert(Assigned(expr));
+   Result:=Self.FindJITter(expr.ClassType);
 end;
 
 // JITStatement
@@ -470,7 +475,7 @@ var
 begin
    Result:=nil;
 
-   jit:=FindJITter(expr);
+   jit:=Self.FindJITter(expr);
    if jit=nil then begin
       OutputDebugString(expr.ClassName);
       Exit;
@@ -907,8 +912,9 @@ procedure TdwsJIT.GreedyJIT(prog : TdwsProgram);
 var
    statementJIT : TJITTedProgramExpr;
 begin
-   if prog.Expr is TProgramExpr then begin
-      statementJIT:=JITStatement(TProgramExpr(prog.Expr), True);
+   if prog.Expr is TProgramExpr then
+   begin
+      statementJIT:=Self.JITStatement(prog.Expr, True);
       if statementJIT<>nil then begin
          prog.Expr.Free;
          prog.Expr:=statementJIT;

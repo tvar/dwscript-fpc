@@ -187,7 +187,7 @@ type
 
 implementation
 
-{$R *.DFM}
+{$R *.dfm}
 
 { TdwsLib }
 
@@ -760,4 +760,4 @@ begin
    Info.ResultAsString:=TWriteOnlyBlockStream(ExtObject).ToString;
 end;
 
-end.
+end.

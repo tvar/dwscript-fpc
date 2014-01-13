@@ -31,7 +31,7 @@ unit dwsXPlatformUI;
 
 interface
 
-uses Windows, Forms, Classes, SysUtils;
+uses {$IFDEF WINDOWS}Windows,{$ENDIF} Forms, Classes, SysUtils;
 
 procedure ProcessApplicationMessages(sleepMilliSeconds : Integer);
 
@@ -46,6 +46,7 @@ implementation
 // ProcessApplicationMessages
 //
 procedure ProcessApplicationMessages(sleepMilliSeconds : Integer);
+{$IFDEF WINDOWS}
 var
    msg: TMsg;
 begin
@@ -57,5 +58,13 @@ begin
    if sleepMilliSeconds>0 then
       Sleep(sleepMilliSeconds);
 end;
+{$ELSE}
+begin
+  Application.ProcessMessages;
+   if sleepMilliSeconds>0 then
+      Sleep(sleepMilliSeconds);
+//  Assert(False);
+end;
+{$ENDIF}
 
 end.

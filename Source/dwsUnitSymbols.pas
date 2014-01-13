@@ -213,9 +213,9 @@ type
          function  RemoveParent(parent : TSymbolTable) : Integer; override;
          procedure ClearParents; override;
 
-         function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID : TGUID; out Obj) : HResult; stdcall;
-         function _AddRef : Integer; stdcall;
-         function _Release : Integer; stdcall;
+         function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID : TGUID; out Obj) : HResult;  {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function _AddRef : Integer;  {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function _Release : Integer;  {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
    end;
 
    // TLinkedSymbolTable

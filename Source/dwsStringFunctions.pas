@@ -958,7 +958,7 @@ begin
                p:=k+1;
             end;
          end;
-         dyn.AsString[n]:=Copy(str, p);
+         dyn.AsString[n]:=Copy(str, p, MaxInt);
       end;
 
    end else begin
@@ -1133,4 +1133,4 @@ initialization
    RegisterInternalStringFunction(TGetTextFunc, '_', ['str', SYS_STRING], []);
 
 end.
-
+

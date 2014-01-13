@@ -6792,6 +6792,7 @@ var
    isReraise : Boolean;
    systemExceptObject : TObject;
    exceptVar : TDataSymbol;
+   vData: TData;
 begin
    try
       exec.DoStep(FTryExpr);
@@ -6824,7 +6825,8 @@ begin
                   doExpr := TExceptDoExpr(FDoExprs.List[x]);
                   exceptVar:=doExpr.ExceptionVar;
                   if exceptVar.Typ.IsCompatible(objSym) then begin
-                     exec.Stack.Data[exec.Stack.BasePointer+exceptVar.StackAddr] := exceptObj;
+                     vData := exec.Stack.Data;
+                     vData[exec.Stack.BasePointer+exceptVar.StackAddr] := exceptObj;
                      try
                         exec.DoStep(doExpr);
                         doExpr.EvalNoResult(exec);
@@ -7469,10 +7471,13 @@ end;
 // CompareValue
 //
 function TArraySortComparer.CompareValue(index1, index2 : Integer) : Integer;
+var
+  vData: TData;
 begin
-   FExec.Stack.Data[FLeftAddr]:=FData[index1];
-   FExec.Stack.Data[FRightAddr]:=FData[index2];
-   Result:=FFuncPointer.EvalAsInteger(FExec, FFunc);
+  vData := FExec.Stack.Data;
+  vData[FLeftAddr]:=FData[index1];
+  vData[FRightAddr]:=FData[index2];
+  Result:=FFuncPointer.EvalAsInteger(FExec, FFunc);
 end;
 
 // ------------------
@@ -8670,4 +8675,4 @@ begin
    Result:=3;
 end;
 
-end.
+end.

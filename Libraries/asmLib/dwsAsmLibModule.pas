@@ -20,7 +20,7 @@ unit dwsAsmLibModule;
 interface
 
 uses
-   Windows, Classes, SysUtils, dwsLanguageExtension,
+   {$IFDEF WINDOWS} Windows, {$ELSE} cmem, {$ENDIF} Classes, SysUtils, dwsLanguageExtension,
    dwsUtils, dwsComp, dwsCompiler,
    dwsExprs, dwsTokenizer, dwsSymbols, dwsErrors, dwsCoreExprs, dwsStack,
    dwsStrings, dwsXPlatform;
@@ -90,7 +90,7 @@ var
    i : Integer;
    tok : TTokenizer;
    token : TTokenType;
-   startPos, curPos : PChar;
+   startPos, curPos : PWideChar;
    hotPos, asmPos : TScriptPos;
    curInstr, curDefines : String;
    outputAsm, nameSymbols : TStringList;
@@ -195,6 +195,7 @@ end;
 //
 function TdwsAsmLanguageExtension.AssembleViaNASM(const code : TStrings;
       const basePos : TScriptPos; msgs : TdwsCompileMessageList) : TBytes;
+{$IFDEF WINDOWS}
 var
    i, p, k : Integer;
    tempFileNameAsm, tempFileNameBin, tempFileNameErr : String;
@@ -266,6 +267,12 @@ begin
       DeleteFile(tempFileNameErr);
    end;
 end;
+{$ELSE}
+begin
+  Assert(False);
+end;
+
+{$ENDIF}
 
 // SymbolDefines
 //
@@ -322,7 +329,11 @@ constructor TdwsASMBlockExpr.Create(Prog: TdwsProgram; const aScriptPos: TScript
 begin
    inherited Create(aScriptPos);
    FCodeSize:=Length(binary);
+   {$IFDEF WINDOWS}
    FCodePtr:=VirtualAlloc(nil, FCodeSize, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+   {$ELSE}
+   FCodePtr := Malloc(FCodeSize);
+   {$ENDIF}
    System.Move(binary[0], FCodePtr^, FCodeSize);
 end;
 
@@ -331,7 +342,11 @@ end;
 destructor TdwsASMBlockExpr.Destroy;
 begin
    inherited;
+   {$IFDEF WINDOWS}
    VirtualFree(FCodePtr, FCodeSize, MEM_RELEASE);
+   {$ELSE}
+   cmem.Free(FCodePtr);
+   {$ENDIF}
 end;
 
 // EvalNoResult
@@ -343,4 +358,4 @@ begin
    TJumpFunc(FCodePtr)(@exec.Stack.Data[exec.Stack.BasePointer]);
 end;
 
-end.
+end.

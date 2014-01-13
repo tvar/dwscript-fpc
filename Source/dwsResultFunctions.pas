@@ -49,11 +49,13 @@ implementation
 
 // RegisterStandardResultFunctions
 //
+
 procedure RegisterStandardResultFunctions(table : TSymbolTable);
 begin
    TPrintFunction.Create(table, 'Print', ['s', SYS_VARIANT], '', []);
    TPrintLnFunction.Create(table, 'PrintLn', ['s', SYS_VARIANT], '', []);
 end;
+
 
 // ------------------
 // ------------------ TPrintFunction ------------------
@@ -115,4 +117,4 @@ begin
    result.AddCRLF;
 end;
 
-end.
+end.

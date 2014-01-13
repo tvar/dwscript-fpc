@@ -57,9 +57,9 @@ type
    TInterfacedSelfObject = class (TRefCountedObject, IUnknown, IGetSelf)
       protected
          function GetSelf : TObject;
-         function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; stdcall;
-         function _AddRef : Integer; stdcall;
-         function _Release : Integer; stdcall;
+         function QueryInterface({$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF} IID: TGUID; out Obj): HResult; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function _AddRef : Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
+         function _Release : Integer; {$IFNDEF WINDOWS}cdecl{$ELSE}stdcall{$ENDIF};
 
       public
          class function NewInstance: TObject; override;
@@ -175,7 +175,7 @@ type
 
    TSimpleCallbackStatus = (csContinue, csAbort);
 
-   TSimpleCallback<T> = function (var item : T) : TSimpleCallbackStatus;
+//   TSimpleCallback<T> = function (var item : T) : TSimpleCallbackStatus;
 
    // TSimpleList<T>
    //
@@ -184,6 +184,7 @@ type
       private
       type
          ArrayT = array of T;
+         TSimpleCallback = function (var item : T) : TSimpleCallbackStatus;
       var
          FItems : ArrayT;
          FCount : Integer;
@@ -196,7 +197,7 @@ type
          procedure Add(const item : T);
          procedure Extract(idx : Integer);
          procedure Clear;
-         procedure Enumerate(const callback : TSimpleCallback<T>);
+         procedure Enumerate(const callback : TSimpleCallback);
          property Items[const position : Integer] : T read GetItems write SetItems; default;
          property Count : Integer read FCount;
    end;
@@ -229,14 +230,16 @@ type
    {: List that maintains its elements sorted, subclasses must override Compare }
    TSortedList<T{$IFNDEF FPC}: TRefCountedObject{$ENDIF}> = class
       private
-      type ArrayT = array of T;
+      type
+        ArrayT = array of T;
+        TSimpleCallback = function (var item : T) : TSimpleCallbackStatus;
       var
          FItems : ArrayT;
          FCount : Integer;
       protected
          function GetItem(index : Integer) : T;
          function Find(const item : T; var index : Integer) : Boolean;
-         function Compare(const item1, item2 : T) : Integer; virtual; abstract;
+         function Compare(const item1, item2 : T) : Integer; virtual;
          procedure InsertItem(index : Integer; const anItem : T);
       public
          function Add(const anItem : T) : Integer;
@@ -246,7 +249,7 @@ type
          function IndexOf(const anItem : T) : Integer;
          procedure Clear;
          procedure Clean;
-         procedure Enumerate(const callback : TSimpleCallback<T>);
+         procedure Enumerate(const callback : TSimpleCallback);
          property Items[index : Integer] : T read GetItem; default;
          property Count : Integer read FCount;
    end;
@@ -320,22 +323,27 @@ type
          property Count : Integer read FCount;
    end;
 
-   TSimpleHashBucket<T> = record
-      HashCode : Cardinal;
-      Value : T;
-   end;
-   TSimpleHashBucketArray<T> = array of TSimpleHashBucket<T>;
-   TSimpleHashProc<T> = procedure (const item : T) of object;
+
+//   TSimpleHashBucketArray<T> = array of TSimpleHashBucket<T>;
+//   TSimpleHashProc<T> = procedure (const item : T) of object;
 
    {: Minimalistic open-addressing hash, subclasses must override SameItem and GetItemHashCode.
       HashCodes *MUST* be non zero }
    TSimpleHash<T> = class
-      private
+      private type
+        TSimpleHashProc = procedure (const item : T) of object;
+
+        TSimpleHashBucket = record
+           HashCode : Cardinal;
+           Value : T;
+        end;
+        TSimpleHashBucketArray = array of TSimpleHashBucket;
+      private var
          {$IFDEF DELPHI_XE3}
          // workaround for XE3 compiler bug
          FBuckets : array of TSimpleHashBucket<T>;
          {$ELSE}
-         FBuckets : TSimpleHashBucketArray<T>;
+         FBuckets : TSimpleHashBucketArray;
          {$ENDIF}
          FCount : Integer;
          FGrowth : Integer;
@@ -344,16 +352,16 @@ type
       protected
          procedure Grow;
          function LinearFind(const item : T; var index : Integer) : Boolean;
-         function SameItem(const item1, item2 : T) : Boolean; virtual; abstract;
+         function SameItem(const item1, item2 : T) : Boolean; virtual;
          // hashCode must be non-null
-         function GetItemHashCode(const item1 : T) : Integer; virtual; abstract;
+         function GetItemHashCode(const item1 : T) : Integer; virtual;
 
       public
          function Add(const anItem : T) : Boolean; // true if added
          function Replace(const anItem : T) : Boolean; // true if added
          function Contains(const anItem : T) : Boolean;
          function Match(var anItem : T) : Boolean;
-         procedure Enumerate(callBack : TSimpleHashProc<T>);
+         procedure Enumerate(callBack : TSimpleHashProc);
          procedure Clear;
 
          property Count : Integer read FCount;
@@ -413,14 +421,15 @@ type
          property Capacity : Integer read FCapacity;
    end;
 
-   TObjectObjectHashBucket<TKey, TValue{$IFNDEF FPC}: TRefCountedObject{$ENDIF}> = record
+(*   TObjectObjectHashBucket<TKey, TValue{$IFNDEF FPC}: TRefCountedObject{$ENDIF}> = record
       Key : TKey;
       Value : TValue;
    end;
+   *)
 
    TSimpleObjectObjectHash<TKey, TValue{$IFNDEF FPC}: TRefCountedObject{$ENDIF}> = class
       type
-         TObjectObjectHashBucket = record
+         TObjectObjectHashBucket = {$IFDEF FPC}object{$ELSE} record {$ENDIF}
             HashCode : Cardinal;
             Name : UnicodeString;
             Key : TKey;
@@ -487,11 +496,13 @@ type
    end;
 
    TThreadCached<T> = class
-      private
+      private type
+        TSimpleCallback = function (var item : T) : TSimpleCallbackStatus;
+      private var
          FLock : TFixedCriticalSection;
          FExpiresAt : TDateTime;
          FMaxAge : TDateTime;
-         FOnNeedValue : TSimpleCallback<T>;
+         FOnNeedValue : TSimpleCallback;
          FValue : T;
 
       protected
@@ -499,7 +510,7 @@ type
          procedure SetValue(const v : T);
 
       public
-         constructor Create(const aNeedValue : TSimpleCallback<T>; maxAgeMSec : Integer);
+         constructor Create(const aNeedValue : TSimpleCallback; maxAgeMSec : Integer);
          destructor Destroy; override;
 
          procedure Invalidate;
@@ -643,7 +654,7 @@ type
       {$endif}
    end;
 
-   TClassCloneConstructor<T: class> = record
+   TClassCloneConstructor<T{$IFNDEF FPC}: class{$ENDIF}> = record
       private
          FTemplate : T;
          FSize : Integer;
@@ -1332,7 +1343,7 @@ var
 // CompareStrings
 //
 {$ifdef FPC}
-function TFastCompareStringList.DoCompareText(const S1, S2: String): Integer;
+function TFastCompareStringList.DoCompareText(const S1, S2: String): PtrInt;
 begin
    Result:=CompareStr(S1, S2);
 end;
@@ -1480,8 +1491,8 @@ begin
    ps2:=PWideChar(NativeInt(s2));
    if ps1<>nil then begin
       if ps2<>nil then begin
-         n1:=PInteger(NativeUInt(ps1)-4)^;
-         n2:=PInteger(NativeUInt(ps2)-4)^;
+         n1:=Length(s1);
+         n2:=Length(s2);
          if n1<n2 then begin
             Result:=UnicodeCompareLen(ps1, ps2, n1);
             if Result=0 then
@@ -1602,7 +1613,7 @@ end;
 //
 function StrDeleteLeft(const aStr : UnicodeString; n : Integer) : UnicodeString;
 begin
-   Result:=Copy(aStr, n+1);
+   Result:=Copy(aStr, n+1, MaxInt);
 end;
 
 // StrDeleteRight
@@ -1620,7 +1631,7 @@ var
 begin
    p:=Pos(aChar, aStr);
    if p>0 then
-      Result:=Copy(aStr, p+1)
+      Result:=Copy(aStr, p+1, MaxInt)
    else Result:='';
 end;
 
@@ -1680,7 +1691,7 @@ end;
 // CompareStrings
 //
 {$ifdef FPC}
-function TFastCompareTextList.DoCompareText(const S1, S2: String): Integer;
+function TFastCompareTextList.DoCompareText(const S1, S2: String): PtrInt;
 begin
    Result:=UnicodeCompareText(s1, s2);
 end;
@@ -2213,6 +2224,11 @@ begin
    index:=lo;
 end;
 
+function TSortedList<T>.Compare(const item1, item2: T): Integer;
+begin
+  Assert(false);
+end;
+
 // InsertItem
 //
 procedure TSortedList<T>.InsertItem(index : Integer; const anItem : T);
@@ -2294,7 +2310,7 @@ end;
 
 // Enumerate
 //
-procedure TSortedList<T>.Enumerate(const callback : TSimpleCallback<T>);
+procedure TSortedList<T>.Enumerate(const callback : TSimpleCallback);
 var
    i : Integer;
 begin
@@ -2645,7 +2661,7 @@ var
 begin
    {$ifdef FPC}
    if utf16String<>'' then
-      WriteBuf(utf16String[1], Length(utf16String)*SizeOf(WideChar));
+      WriteBuf(@utf16String[1], Length(utf16String)*SizeOf(WideChar));
    {$else}
    stringCracker:=NativeUInt(utf16String);
    if stringCracker<>0 then
@@ -2896,7 +2912,7 @@ var
    {$IFDEF DELPHI_XE3}
    oldBuckets : array of TSimpleHashBucket<T>;
    {$ELSE}
-   oldBuckets : TSimpleHashBucketArray<T>;
+   oldBuckets : TSimpleHashBucketArray;
    {$ENDIF}
 begin
    if FCapacity=0 then
@@ -2936,6 +2952,16 @@ begin
          Exit(True);
       index:=(index+1) and (FCapacity-1);
    until False;
+end;
+
+function TSimpleHash<T>.SameItem(const item1, item2: T): Boolean;
+begin
+  Assert(False);
+end;
+
+function TSimpleHash<T>.GetItemHashCode(const item1: T): Integer;
+begin
+  Assert(False);
 end;
 
 // Add
@@ -3003,7 +3029,7 @@ end;
 
 // Enumerate
 //
-procedure TSimpleHash<T>.Enumerate(callBack : TSimpleHashProc<T>);
+procedure TSimpleHash<T>.Enumerate(callBack : TSimpleHashProc);
 var
    i : Integer;
 begin
@@ -3074,7 +3100,9 @@ procedure TSimpleList<T>.Extract(idx : Integer);
 var
    n : Integer;
 begin
+{$IFNDEF FPC}
    FItems[idx]:=Default(T);
+{$ENDIF}
    n:=FCount-idx-1;
    if n>0 then begin
       Move(FItems[idx+1], FItems[idx], n*SizeOf(T));
@@ -3094,7 +3122,7 @@ end;
 
 // Enumerate
 //
-procedure TSimpleList<T>.Enumerate(const callback : TSimpleCallback<T>);
+procedure TSimpleList<T>.Enumerate(const callback : TSimpleCallback);
 var
    i : Integer;
 begin
@@ -3557,11 +3585,11 @@ end;
 //
 procedure TSimpleObjectObjectHash<TKey, TValue>.SetValue(aKey : TKey; aValue : TValue);
 var
-   bucket : TObjectObjectHashBucket;
+  bucket : TObjectObjectHashBucket;
 begin
-   bucket.Key:=aKey;
-   bucket.Value:=aValue;
-   Replace(bucket);
+  bucket.Key:=aKey;
+  bucket.Value:=aValue;
+  Replace(bucket);
 end;
 
 // LinearFind
@@ -3640,7 +3668,7 @@ end;
 
 // Create
 //
-constructor TThreadCached<T>.Create(const aNeedValue : TSimpleCallback<T>; maxAgeMSec : Integer);
+constructor TThreadCached<T>.Create(const aNeedValue : TSimpleCallback; maxAgeMSec : Integer);
 begin
    FLock:=TFixedCriticalSection.Create;
    FOnNeedValue:=aNeedValue;
@@ -3930,7 +3958,9 @@ end;
 //
 procedure TSimpleQueue<T>.Release(i: PItemT);
 begin
+{$IFNDEF FPC}
    i.Value:=Default(T);
+{$ENDIF}
    if FPoolLeft>0 then begin
       Dec(FPoolLeft);
       i.Prev:=nil;

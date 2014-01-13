@@ -43,7 +43,7 @@ type
          constructor Create(resultType : TdwsResultType); override;
          destructor Destroy; override;
 
-         procedure AddString(const Str: String); override;
+         procedure AddString(const Str: UnicodeString); override;
          procedure Clear; override;
          procedure SetStr(const Str: String);
 
@@ -143,7 +143,7 @@ end;
 
 // AddString
 //
-procedure TdwsStringResult.AddString(const Str: String);
+procedure TdwsStringResult.AddString(const Str: UnicodeString);
 var
    buf : String;
 begin
@@ -298,4 +298,4 @@ begin
    Info.ResultAsString := TdwsStringResult(Info.Execution.Result).Str;
 end;
 
-end.
+end.

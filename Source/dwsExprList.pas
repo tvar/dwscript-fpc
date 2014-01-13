@@ -25,7 +25,8 @@ interface
 
 uses
    dwsUtils,
-   dwsSymbols;
+   dwsSymbols,
+   dwsXPlatform;
 
 type
 
@@ -263,4 +264,4 @@ begin
    Result:=Exec.ValidateFileName(AsString[x]);
 end;
 
-end.
+end.

@@ -36,18 +36,22 @@ unit dwsXPlatform;
 interface
 
 uses
-   Classes, SysUtils, Types, Masks,
    {$IFDEF FPC}
+      fpmasks,
       {$IFDEF Windows}
-         Windows
+         Windows,
       {$ELSE}
-         LCLIntf
+         BaseUnix, FileUtil,
+
       {$ENDIF}
    {$ELSE}
-      Windows
-      {$IFNDEF VER200}, IOUtils{$ENDIF}
+      Masks,
+      {$IFDEF Windows}
+      Windows,
+      {$ENDIF}
+      {$IFNDEF VER200} IOUtils,{$ENDIF}
    {$ENDIF}
-   ;
+   Classes, SysUtils, Types;
 
 const
 {$IFDEF UNIX}
@@ -55,7 +59,11 @@ const
 {$ELSE}
    cLineTerminator  = #13#10;
 {$ENDIF}
-
+{$IFDEF FPC}
+  {$IFNDEF Windows}
+    ERROR_FILE_NOT_FOUND = ESysENOENT;
+  {$ENDIF}
+{$ENDIF}
    // following is missing from D2010
    INVALID_HANDLE_VALUE = DWORD(-1);
 
@@ -118,7 +126,6 @@ type
    {$ENDIF}
 
    {$IFDEF FPC}
-   TBytes = array of Byte;
 
    RawByteString = UnicodeString;
 
@@ -154,8 +161,10 @@ function UnicodeCompareStr(const S1, S2 : UnicodeString) : Integer; inline;
 function AnsiCompareText(const S1, S2 : UnicodeString) : Integer;
 function AnsiCompareStr(const S1, S2 : UnicodeString) : Integer;
 
+
 function UnicodeComparePChars(p1 : PWideChar; n1 : Integer; p2 : PWideChar; n2 : Integer) : Integer; overload;
 function UnicodeComparePChars(p1, p2 : PWideChar; n : Integer) : Integer; overload;
+
 
 function UnicodeLowerCase(const s : UnicodeString) : UnicodeString;
 function UnicodeUpperCase(const s : UnicodeString) : UnicodeString;
@@ -231,9 +240,17 @@ uses Variants;
 {$endif}
 
 {$ifdef FPC}
+  {$IFDEF WINDOWS}
 type
-   TFindExInfoLevels = FINDEX_INFO_LEVELS;
+  TFindExInfoLevels = FINDEX_INFO_LEVELS;
+  {$endif}
 {$endif}
+{$IFNDEF FPC}
+function GetLastOSError: DWORD; inline;
+begin
+  Result := GetLastError
+end;
+{$ENDIF}
 
 // GetSystemTimeMilliseconds
 //
@@ -245,7 +262,8 @@ begin
    GetSystemTimeAsFileTime(fileTime);
    Result:=Round(PInt64(@fileTime)^*1e-4); // 181
 {$ELSE}
-   Not yet implemented!
+   TimeStampToMSecs(DateTimeToTimeStamp(now()));
+//   Not yet implemented!
 {$ENDIF}
 end;
 
@@ -290,7 +308,11 @@ begin
       Result:= EncodeDate(wYear, wMonth, wDay)
               +EncodeTime(wHour, wMinute, wSecond, wMilliseconds);
 {$ELSE}
-   Not yet implemented!
+  FillChar(systemTime, SizeOf(systemTime), 0);
+  GetLocalTime(systemTime);
+  with systemTime do
+     Result:= EncodeDate(Year, Month, Day)
+             +EncodeTime(Hour, Minute, Second, MilliSecond);
 {$ENDIF}
 end;
 
@@ -340,7 +362,11 @@ function UnicodeComparePChars(p1 : PWideChar; n1 : Integer; p2 : PWideChar; n2 :
 const
    CSTR_EQUAL = 2;
 begin
+{$IFDEF WINDOWS}
    Result:=CompareStringW(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n1, p2, n2)-CSTR_EQUAL;
+{$ELSE}
+  Assert(false);
+{$ENDIF}
 end;
 
 // UnicodeComparePChars
@@ -349,18 +375,28 @@ function UnicodeComparePChars(p1, p2 : PWideChar; n : Integer) : Integer; overlo
 const
    CSTR_EQUAL = 2;
 begin
+{$IFDEF WINDOWS}
    Result:=CompareStringW(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n, p2, n)-CSTR_EQUAL;
+{$ELSE}
+  Assert(false);
+{$ENDIF}
 end;
 
 // UnicodeLowerCase
 //
 function UnicodeLowerCase(const s : UnicodeString) : UnicodeString;
 begin
-   if s<>'' then begin
-      Result:=s;
-      UniqueString(Result);
-      Windows.CharLowerBuffW(PWideChar(Pointer(Result)), Length(Result));
-   end else Result:=s;
+  if s<>'' then 
+  begin
+    {$IFDEF Windows}
+    Result:=s;
+    UniqueString(Result);
+    Windows.CharLowerBuffW(PWideChar(Pointer(Result)), Length(Result));
+    {$ELSE}
+    Result := SysUtils.UnicodeLowerCase(s);
+    {$ENDIF}
+  end else
+    Result:=s;
 end;
 
 // UnicodeUpperCase
@@ -368,9 +404,13 @@ end;
 function UnicodeUpperCase(const s : UnicodeString) : UnicodeString;
 begin
    if s<>'' then begin
+      {$IFDEF Windows}
       Result:=s;
       UniqueString(Result);
       Windows.CharUpperBuffW(PWideChar(Pointer(Result)), Length(Result));
+      {$ELSE}
+      Result:=SysUtils.UnicodeUpperCase(s);
+      {$ENDIF}
    end else Result:=s;
 end;
 
@@ -401,7 +441,11 @@ end;
 function InterlockedIncrement(var val : Integer) : Integer;
 {$ifndef WIN32_ASM}
 begin
-   Result:=Windows.InterlockedIncrement(val);
+  {$IFDEF WINDOWS}
+  Result:=Windows.InterlockedIncrement(val);
+  {$ELSE}
+  Result := system.InterLockedIncrement(val);
+  {$ENDIF}
 {$else}
 asm
    mov   ecx,  eax
@@ -416,7 +460,11 @@ end;
 function InterlockedDecrement(var val : Integer) : Integer;
 {$ifndef WIN32_ASM}
 begin
+   {$IFDEF WINDOWS}
    Result:=Windows.InterlockedDecrement(val);
+   {$ELSE}
+   Result := system.InterLockedDecrement(val);
+   {$ENDIF}
 {$else}
 asm
    mov   ecx,  eax
@@ -456,7 +504,7 @@ function InterlockedExchangePointer(var target : Pointer; val : Pointer) : Point
 {$ifndef WIN32_ASM}
 begin
    {$ifdef FPC}
-   Result:=InterlockedExchangePointer(target, val);
+   Result:=system.InterLockedExchange(target, val);
    {$else}
    Result:=Windows.InterlockedExchangePointer(target, val);
    {$endif}
@@ -469,7 +517,15 @@ end;
 
 // SetThreadName
 //
+{$IFDEF WINDOWS}
 function IsDebuggerPresent : BOOL; stdcall; external kernel32 name 'IsDebuggerPresent';
+{$ELSE}
+function IsDebuggerPresent : Boolean;
+begin
+  Result := False;
+end;
+{$ENDIF}
+
 procedure SetThreadName(const threadName : PAnsiChar; threadID : Cardinal = Cardinal(-1));
 // http://www.codeproject.com/Articles/8549/Name-your-threads-in-the-VC-debugger-thread-list
 type
@@ -500,7 +556,9 @@ end;
 //
 procedure OutputDebugString(const msg : UnicodeString);
 begin
+   {$IFDEF WINDOWS}
    Windows.OutputDebugStringW(PWideChar(msg));
+   {$ENDIF}
 end;
 
 // WriteToOSEventLog
@@ -511,6 +569,7 @@ var
   eventSource : THandle;
   detailsPtr : array [0..1] of PWideChar;
 begin
+{$IFDEF WINDOWS}
    if logName<>'' then
       eventSource:=RegisterEventSourceW(nil, PWideChar(logName))
    else eventSource:=RegisterEventSourceW(nil, PWideChar(ChangeFileExt(ExtractFileName(ParamStr(0)), '')));
@@ -525,6 +584,7 @@ begin
          DeregisterEventSource(eventSource);
       end;
    end;
+{$ENDIF}
 end;
 
 // SetDecimalSeparator
@@ -560,10 +620,14 @@ end;
 // CollectFiles
 //
 type
-   TFindDataRec = record
-      Handle : THandle;
-      Data : TWin32FindData;
-   end;
+{$IFNDEF FPC}
+  TFindDataRec = record
+     Handle : THandle;
+     Data : TWin32FindData;
+  end;
+{$ELSE}
+  TFindDataRec = TSearchRec;
+{$ENDIF}
 
 // CollectFilesMasked
 //
@@ -576,14 +640,18 @@ const
    FindExInfoBasic = 1;
 var
    searchRec : TFindDataRec;
-   infoLevel : TFindexInfoLevels;
    fileName : String;
    shouldAbort : Boolean;
+   {$ifdef WINDOWS}
+   infoLevel : TFindexInfoLevels;
+   {$endif}
 begin
+{$ifdef WINDOWS}
    // 6.1 required for FindExInfoBasic (Win 2008 R2 or Win 7)
    if ((Win32MajorVersion shl 8) or Win32MinorVersion)>=$601 then
       infoLevel:=TFindexInfoLevels(FindExInfoBasic)
    else infoLevel:=FindExInfoStandard;
+{$endif}
 
    if Assigned(onProgress) then begin
       shouldAbort:=False;
@@ -592,6 +660,31 @@ begin
    end;
 
    fileName:=directory+'*';
+{$ifdef FPC}
+   if FindFirst(fileName, 0, searchRec) = 0 then
+   try
+     repeat
+       if ((searchRec.Attr and faDirectory) = 0) then
+       begin
+          fileName := searchRec.Name;
+          if mask.Matches(fileName) then
+          begin
+             fileName := directory + fileName;
+             list.Add(fileName);
+          end;
+       end else if recurseSubdirectories then
+       begin
+         if (searchRec.Name= '.') or (searchRec.Name= '..') then
+           Continue;
+         fileName := directory + searchRec.Name + PathDelim;
+         CollectFilesMasked(fileName, mask,list, True, onProgress);
+       end;
+     until FindNext(searchRec) <> 0;
+   finally
+     FindClose(searchRec);
+   end;
+
+{$ELSE}
    searchRec.Handle:=FindFirstFileEx(PChar(Pointer(fileName)), infoLevel,
                                      @searchRec.Data, FINDEX_SEARCH_OPS.FindExSearchNameMatch,
                                      nil, 0);
@@ -619,6 +712,7 @@ begin
       until not FindNextFile(searchRec.Handle, searchRec.Data);
       Windows.FindClose(searchRec.Handle);
    end;
+{$ENDIF}
 end;
 
 // CollectFiles
@@ -682,14 +776,27 @@ end;
 //
 function LoadTextFromBuffer(const buf : TBytes) : UnicodeString;
 var
-   n : Integer;
-   encoding : TEncoding;
+  n : Integer;
+{$ifndef fpc}
+  encoding : TEncoding;
+{$endif}
 begin
-   encoding:=nil;
-   n:=TEncoding.GetBufferEncoding(buf, encoding);
-   if not Assigned(encoding) then
-      encoding:=TEncoding.UTF8;
-   Result:=encoding.GetString(buf, n, Length(buf)-n);
+{$ifdef fpc}
+  result := '';
+  if Length(buf) = 0 then
+    exit;
+  SetLength(Result, length(buf));
+  n := Utf8ToUnicode(PUnicodeChar(Result), length(Result) + 1,
+    PAnsiChar(@(buf[0])), length(buf));
+  if n > 0 then
+    SetLength(Result, n-1);
+{$else}
+  encoding:=nil;
+  n:=TEncoding.GetBufferEncoding(buf, encoding);
+  if not Assigned(encoding) then
+     encoding:=TEncoding.UTF8;
+  Result:=encoding.GetString(buf, n, Length(buf)-n);
+{$endif}
 end;
 
 // LoadTextFromStream
@@ -709,29 +816,42 @@ end;
 //
 function LoadTextFromFile(const fileName : UnicodeString) : UnicodeString;
 const
-   INVALID_FILE_SIZE = DWORD($FFFFFFFF);
+  INVALID_FILE_SIZE = DWORD($FFFFFFFF);
 var
-   hFile : THandle;
-   n, nRead : Cardinal;
-   buf : TBytes;
+  hFile : THandle;
+  n, nRead : Cardinal;
+  buf : TBytes;
 begin
-   hFile:=OpenFileForSequentialReadOnly(fileName);
-   if hFile=INVALID_HANDLE_VALUE then
-      Exit('');
-   try
-      n:=GetFileSize(hFile, nil);
-      if n=INVALID_FILE_SIZE then
-         RaiseLastOSError;
-      if n>0 then begin
-         SetLength(buf, n);
-         if not ReadFile(hFile, buf[0], n, nRead, nil) then
-            RaiseLastOSError;
-         Result:=LoadTextFromBuffer(buf);
-      end else Result:='';
-   finally
-      FileClose(hFile);
-   end;
+  hFile:=OpenFileForSequentialReadOnly(fileName);
+  if hFile=INVALID_HANDLE_VALUE then
+     Exit('');
+  try
+    {$ifdef FPC}
+    n := SysUtils.FileSeek(hFile, 0, fsFromEnd);
+    SysUtils.FileSeek(hFile, 0, fsFromBeginning);
+    {$else}
+    n := GetFileSize(hFile, nil);
+    {$endif}
+    if n=INVALID_FILE_SIZE then
+       RaiseLastOSError;
+    if n>0 then
+    begin
+      SetLength(buf, n);
+      {$ifdef fpc}
+      nRead := FileRead(hFile, buf[0], n);
+      Assert(n = nRead);
+      {$else}
+      if not ReadFile(hFile, buf[0], n, nRead, nil) then
+        RaiseLastOSError;
+      {$endif}
+      Result:=LoadTextFromBuffer(buf);
+    end else
+      Result:='';
+  finally
+    FileClose(hFile);
+  end;
 end;
+
 
 // SaveTextToUTF8File
 //
@@ -745,8 +865,12 @@ begin
    hFile:=OpenFileForSequentialWriteOnly(fileName);
    try
       if utf8<>'' then
-         if not WriteFile(hFile, utf8[1], Length(utf8), nWrite, nil) then
-            RaiseLastOSError;
+      {$ifdef fpc}
+        FileWrite(hFile, utf8[1], Length(utf8));
+      {$else}
+        if not WriteFile(hFile, utf8[1], Length(utf8), nWrite, nil) then
+          RaiseLastOSError;
+      {$endif}
    finally
       FileClose(hFile);
    end;
@@ -756,20 +880,30 @@ end;
 //
 function OpenFileForSequentialReadOnly(const fileName : UnicodeString) : THandle;
 begin
-   Result:=CreateFileW(PWideChar(fileName), GENERIC_READ, FILE_SHARE_READ+FILE_SHARE_WRITE,
-                       nil, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
-   if Result=INVALID_HANDLE_VALUE then begin
-      if GetLastError<>ERROR_FILE_NOT_FOUND then
-         RaiseLastOSError;
-   end;
+  {$ifdef FPC}
+  Result := SysUtils.FileOpen(fileName, fmOpenRead or fmShareDenyNone);
+  {$else}
+  Result:=CreateFileW(PWideChar(fileName), GENERIC_READ, FILE_SHARE_READ+FILE_SHARE_WRITE,
+                      nil, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
+  {$endif}
+  if Result=INVALID_HANDLE_VALUE then
+  begin
+    if GetLastOSError<>ERROR_FILE_NOT_FOUND then
+      RaiseLastOSError;
+  end;
 end;
 
 // OpenFileForSequentialWriteOnly
 //
 function OpenFileForSequentialWriteOnly(const fileName : UnicodeString) : THandle;
 begin
+  {$ifdef FPC}
+  Result := SysUtils.FileOpen(fileName, fmOpenWrite);
+  {$else}
+
    Result:=CreateFileW(PWideChar(fileName), GENERIC_WRITE, 0, nil, CREATE_ALWAYS,
                        FILE_ATTRIBUTE_NORMAL+FILE_FLAG_SEQUENTIAL_SCAN, 0);
+  {$endif}
    if Result=INVALID_HANDLE_VALUE then
       RaiseLastOSError;
 end;
@@ -778,14 +912,22 @@ end;
 //
 procedure CloseFileHandle(hFile : THandle);
 begin
+  {$ifdef FPC}
+  FileClose(hFile);
+  {$else}
    CloseHandle(hFile);
+  {$endif}
 end;
 
 // FileCopy
 //
 function FileCopy(const existing, new : UnicodeString; failIfExists : Boolean) : Boolean;
 begin
+  {$ifndef WINDOWS}
+  FileUtil.CopyFile(existing, new);
+  {$ELSE}
    Result:=Windows.CopyFileW(PWideChar(existing), PWideChar(new), failIfExists);
+  {$ENDIF}
 end;
 
 // FileDelete
@@ -805,6 +947,7 @@ end;
 // FileSize
 //
 function FileSize(const name : String) : Int64;
+{$IFDEF WINDOWS}
 var
    info : TWin32FileAttributeData;
 begin
@@ -812,10 +955,16 @@ begin
       Result:=info.nFileSizeLow or (Int64(info.nFileSizeHigh) shl 32)
    else Result:=-1;
 end;
+{$ELSE}
+begin
+  Result := FileUtil.FileSize(name);
+end;
+{$ENDIF}
 
 // FileDateTime
 //
 function FileDateTime(const name : String) : TDateTime;
+{$IFDEF WINDOWS}
 var
    info : TWin32FileAttributeData;
    systemTime : TSystemTime;
@@ -825,6 +974,11 @@ begin
       Result:=SystemTimeToDateTime(systemTime);
    end else Result:=0;
 end;
+{$ELSE}
+begin
+  Result := FileDatetoDateTime(SysUtils.FileAge(name));
+end;
+{$ENDIF}
 
 // DirectSet8087CW
 //
@@ -908,35 +1062,43 @@ end;
 //
 constructor TFixedCriticalSection.Create;
 begin
-   InitializeCriticalSection(FCS);
+  {$ifdef FPC}
+  InitCriticalSection(FCS);
+  {$ELSE}
+  InitializeCriticalSection(FCS);
+  {$ENDIF}
 end;
 
 // Destroy
 //
 destructor TFixedCriticalSection.Destroy;
 begin
-   DeleteCriticalSection(FCS);
+  {$ifdef FPC}
+  DoneCriticalsection(FCS);
+  {$ELSE}
+  DeleteCriticalSection(FCS);
+  {$ENDIF}
 end;
 
 // Enter
 //
 procedure TFixedCriticalSection.Enter;
 begin
-   EnterCriticalSection(FCS);
+  EnterCriticalSection(FCS);
 end;
 
 // Leave
 //
 procedure TFixedCriticalSection.Leave;
 begin
-   LeaveCriticalSection(FCS);
+  LeaveCriticalSection(FCS);
 end;
 
 // TryEnter
 //
 function TFixedCriticalSection.TryEnter : Boolean;
 begin
-   Result:=TryEnterCriticalSection(FCS);
+   Result:=Boolean(TryEnterCriticalSection(FCS));
 end;
 
 // ------------------
@@ -946,6 +1108,11 @@ end;
 // GetTempFileName
 //
 class function TPath.GetTempFileName : UnicodeString;
+{$IFDEF FPC}
+begin
+  Result := SysUtils.GetTempFileName;
+end;
+{$ELSE}
 {$IFDEF VER200} // Delphi 2009
 var
    tempPath, tempFileName : array [0..MAX_PATH] of WideChar; // Buf sizes are MAX_PATH+1
@@ -962,6 +1129,7 @@ begin
    Result:=IOUTils.TPath.GetTempFileName;
 {$ENDIF}
 end;
+{$ENDIF}
 
 // ------------------
 // ------------------ TFile ------------------
@@ -1025,6 +1193,7 @@ function SupportsSRW : Boolean;
 var
    h : Integer;
 begin
+{$IFDEF WINDOWS}
    if not vSupportsSRWChecked then begin
       vSupportsSRWChecked:=True;
       h:=GetModuleHandle('kernel32');
@@ -1034,6 +1203,9 @@ begin
       ReleaseSRWLockShared:=GetProcAddress(h, 'ReleaseSRWLockShared');
    end;
    Result:=Assigned(AcquireSRWLockExclusive);
+{$ELSE}
+  Result := False;
+{$ENDIF}
 end;
 
 // Create

@@ -47,6 +47,9 @@ implementation
 // PrepareVMTOffsets
 //
 procedure PrepareVMTOffsets;
+{$IFDEF FPC}
+begin
+{$ENDIF}
 asm
    mov vmt_Prepared, True
    mov vmt_IDataContext_GetSelf, VMTOFFSET IDataContext.GetSelf
@@ -59,6 +62,10 @@ asm
    mov vmt_TExprBase_AssignValueAsFloat, VMTOFFSET TExprBase.AssignValueAsFloat
    mov vmt_TExprBase_AssignValueAsInteger, VMTOFFSET TExprBase.AssignValueAsInteger
 end;
+{$IFDEF FPC}
+end;
+{$ENDIF}
+
 
 procedure PrepareDynArrayIDataContextToFDataOffset;
 var
@@ -88,4 +95,4 @@ initialization
    PrepareVMTOffsets;
    PrepareDynArrayIDataContextToFDataOffset;
 
-end.
+end.
