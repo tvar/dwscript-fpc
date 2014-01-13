@@ -262,7 +262,7 @@ begin
    GetSystemTimeAsFileTime(fileTime);
    Result:=Round(PInt64(@fileTime)^*1e-4); // 181
 {$ELSE}
-   TimeStampToMSecs(DateTimeToTimeStamp(now()));
+   Result:=Round(TimeStampToMSecs(DateTimeToTimeStamp(now())));
 //   Not yet implemented!
 {$ENDIF}
 end;
@@ -1269,4 +1269,4 @@ initialization
 
    InitializeGetSystemMilliseconds;
 
-end.
+end.

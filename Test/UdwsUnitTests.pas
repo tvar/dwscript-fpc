@@ -13,7 +13,7 @@ type
       protected
          FCompiler : TDelphiWebScript;
          FUnit : TdwsUnit;
-         FMagicVar : String;
+         FMagicVar : UnicodeString;
 
          procedure SetupUnit;
 
@@ -1729,7 +1729,7 @@ begin
       CheckEquals('world', data[1], 'data 1');
 
       SetLength(myData, 1);
-      myData[0]:='byebye';
+      myData[0]:=UnicodeString('byebye');
       astr.Data:=myData;
 
       exec.Info.Func['MyTest'].Call;
@@ -2011,7 +2011,7 @@ begin
    try
       exec.RunProgram(0);
       print:=exec.Info.Func['Print'];
-      print.Call(['world']);
+      print.Call([UnicodeString('world')]);
 
       CheckEquals( 'Hello'#13#10'world',
                   exec.Result.ToString+exec.Msgs.AsInfo);
@@ -2359,4 +2359,4 @@ initialization
 
    RegisterTest('dwsUnitTests', TdwsUnitTests);
 
-end.
+end.
