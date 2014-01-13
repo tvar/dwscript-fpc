@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="9"/>
+    <PathDelim Value="\"/>
+    <General>
+      <Flags>
+        <MainUnitHasUsesSectionForAllUnits Value="False"/>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <MainUnit Value="0"/>
+      <Title Value="LanguageTests"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <i18n>
+      <EnableI18N LFM="False"/>
+    </i18n>
+    <VersionInfo>
+      <StringTable ProductVersion=""/>
+    </VersionInfo>
+    <BuildModes Count="1">
+      <Item1 Name="Default" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
+      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
+    </PublishOptions>
+    <RunParams>
+      <local>
+        <FormatVersion Value="1"/>
+      </local>
+    </RunParams>
+    <RequiredPackages Count="2">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FPCUnitTestRunner"/>
+      </Item2>
+    </RequiredPackages>
+    <Units Count="33">
+      <Unit0>
+        <Filename Value="LanguageTests.lpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="..\Source\dwsMathComplexFunctions.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\Source\dwsMath3DFunctions.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\Source\dwsDebugFunctions.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\Libraries\LinqLib\dwsLinqSql.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="dwsLinqSql"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\Libraries\LinqLib\dwsLinqJson.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="dwsLinqJson"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\Libraries\DocBuilder\dwsDocBuilder.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="dwsDocBuilder"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="UScriptTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UScriptTests"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="UAlgorithmsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UAlgorithmsTests"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="UdwsUnitTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UdwsUnitTests"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="UdwsUnitTestsStatic.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UdwsUnitTestsStatic"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="UHTMLFilterTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UHTMLFilterTests"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="UCornerCasesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UCornerCasesTests"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="UdwsClassesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UdwsClassesTests"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="..\Libraries\ClassesLib\dwsClasses.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="UdwsDataBaseTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UdwsDataBaseTests"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="UdwsFunctionsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="UCOMConnectorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="UTestDispatcher.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="UDebuggerTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="UdwsUtilsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UdwsUtilsTests"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="UMemoryTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="UBuildTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="USourceUtilsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="USourceUtilsTests"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="ULocalizerTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ULocalizerTests"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="UJSONTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="UJSONConnectorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit26>
+      <Unit27>
+        <Filename Value="UTokenizerTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="ULanguageExtensionTests.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ULanguageExtensionTests"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="UJITTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="UJITx86Tests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit30>
+      <Unit31>
+        <Filename Value="ULinqTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit31>
+      <Unit32>
+        <Filename Value="ULinqJsonTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit32>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <PathDelim Value="\"/>
+    <SearchPaths>
+      <IncludeFiles Value="..\Source;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\Source;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib"/>
+      <UnitOutputDirectory Value="..\lib\$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <SyntaxMode Value="Delphi"/>
+        <IncludeAssertionCode Value="True"/>
+        <CPPInline Value="False"/>
+      </SyntaxOptions>
+    </Parsing>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerMessages>
+        <MsgFileName Value=""/>
+      </CompilerMessages>
+      <CompilerPath Value="$(CompPath)"/>
+    </Other>
+  </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="3">
+      <Item1>
+        <Name Value="EAbort"/>
+      </Item1>
+      <Item2>
+        <Name Value="ECodetoolError"/>
+      </Item2>
+      <Item3>
+        <Name Value="EFOpenError"/>
+      </Item3>
+    </Exceptions>
+  </Debugging>
+</CONFIG>
