@@ -358,7 +358,6 @@ function TStackMixIn.ReadIntValue_BaseRelative(SourceAddr: Integer) : Int64;
 var
    varData : PVarData;
 begin
-   Assert(SourceAddr >= 0);
    varData:=@FBaseData[SourceAddr];
    Assert(varData.VType=varInt64);
    Result:=varData^.VInt64;
@@ -482,7 +481,6 @@ function TStackMixIn.PointerToInterfaceValue_BaseRelative(addr : Integer) : PIUn
 var
    varData : PVarData;
 begin
-   Assert(addr >= 0);
    varData:=@FBaseData[addr];
    Assert(varData.VType=varUnknown);
    Result:=@varData.VUnknown;

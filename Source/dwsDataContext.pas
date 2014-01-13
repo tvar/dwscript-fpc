@@ -28,7 +28,7 @@ type
    TData = array of Variant;
    PData = ^TData;
    TDataArray = array [0..MaxInt shr 5] of Variant;
-   PDataArray = ^TDataArray;
+   PDataArray = {$IFDEF FPC} PVarData {$ELSE} ^TDataArray {$ENDIF};
    TVarDataArray = array [0..MaxInt shr 5] of TVarData;
    PVarDataArray = ^TVarDataArray;
    PIUnknown = ^IUnknown;
