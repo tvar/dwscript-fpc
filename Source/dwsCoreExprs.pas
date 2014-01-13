@@ -4180,7 +4180,7 @@ begin
             Result:=1
          else Result:=0;
       varSingle, varDouble, varCurrency :
-         Result:=Round(v);
+         Result:=Round(Double(v));
       varString, varUString, varOleStr : begin
          s:=v;
          if s<>'' then
@@ -8675,4 +8675,4 @@ begin
    Result:=3;
 end;
 
-end.
+end.
