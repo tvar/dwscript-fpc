@@ -17,6 +17,7 @@ Lazarus/*.pas
 Lazarus/Makefile*
 *.lps
 
+#Delphi generated files and out folders
 *.dcu
 __history/
 *.dsk
@@ -26,6 +27,5 @@ Delphi*/*.res
 dcu/
 bin/
 *.~*
-
 Test/*.res
 *.dproj
