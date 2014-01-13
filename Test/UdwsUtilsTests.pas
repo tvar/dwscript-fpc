@@ -62,6 +62,10 @@ type
          procedure QueueTest;
    end;
 
+
+   TSimpleQueueVariant = TSimpleQueue<Variant>;
+   TSimpleStackInteger = TSimpleStack<Integer>;
+   TSimpleListIGetSelf = TSimpleList<IGetSelf>;
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -78,9 +82,9 @@ implementation
 //
 procedure TdwsUtilsTests.StackIntegerGenericTest;
 var
-   stack : TSimpleStack<Integer>;
+   stack : TSimpleStackInteger;
 begin
-   stack:=TSimpleStack<Integer>.Create;
+   stack:=TSimpleStackInteger.Create;
 
    CheckEquals(0, stack.Count);
 
@@ -112,9 +116,9 @@ end;
 procedure TdwsUtilsTests.StackLotsOfIntegerGenericTest;
 var
    i, j : Integer;
-   stack : TSimpleStack<Integer>;
+   stack : TSimpleStackInteger;
 begin
-   stack:=TSimpleStack<Integer>.Create;
+   stack:=TSimpleStackInteger.Create;
    try
       for i:=1 to 1000 do
          stack.Push(i);
@@ -392,7 +396,8 @@ end;
 // SortedListExtract
 //
 type
-   TTestSortedList = class (TSortedList<TRefCountedObject>)
+   TSortedRefCountedObjectList = TSortedList<TRefCountedObject>;
+   TTestSortedList = class (TSortedRefCountedObjectList)
       function Compare(const item1, item2 : TRefCountedObject) : Integer; override;
    end;
 function TTestSortedList.Compare(const item1, item2 : TRefCountedObject) : Integer;
@@ -401,7 +406,7 @@ begin
 end;
 procedure TdwsUtilsTests.SortedListExtract;
 var
-   list : TSortedList<TRefCountedObject>;
+   list : TSortedRefCountedObjectList;
 begin
    list:=TTestSortedList.Create;
    list.Add(nil);
@@ -418,12 +423,12 @@ end;
 //
 procedure TdwsUtilsTests.SimpleListOfInterfaces;
 var
-   list : TSimpleList<IGetSelf>;
+   list : TSimpleListIGetSelf;
    obj1 : IGetSelf;
 begin
    obj1:=TInterfacedSelfObject.Create;
 
-   list:=TSimpleList<IGetSelf>.Create;
+   list:=TSimpleListIGetSelf.Create;
    try
       list.Add(nil);
       list.Add(obj1);
@@ -616,13 +621,13 @@ end;
 //
 procedure TdwsUtilsTests.StrContainsTest;
 begin
-   CheckTrue(StrContains('banana', 'a'));
-   CheckFalse(StrContains('banana', 'z'));
-   CheckTrue(StrContains('banana', 'na'));
-   CheckTrue(StrContains('banana', 'b'));
-   CheckTrue(StrContains('banana', 'ba'));
-   CheckTrue(StrContains('bananas', 'as'));
-   CheckTrue(StrContains('bananas', 's'));
+   CheckTrue(StrContains('banana', WideChar('a')));
+   CheckFalse(StrContains('banana', WideChar('z')));
+   CheckTrue(StrContains('banana', UnicodeString('na')));
+   CheckTrue(StrContains('banana', WideChar('b')));
+   CheckTrue(StrContains('banana', UnicodeString('ba')));
+   CheckTrue(StrContains('bananas', UnicodeString('as')));
+   CheckTrue(StrContains('bananas', WideChar('s')));
 end;
 
 // SortTest
@@ -735,10 +740,10 @@ end;
 //
 procedure TdwsUtilsTests.QueueTest;
 var
-   q : TSimpleQueue<Variant>;
+   q : TSimpleQueueVariant;
    v : Variant;
 begin
-   q:=TSimpleQueue<Variant>.Create;
+   q:=TSimpleQueueVariant.Create;
    try
       CheckEquals(0, q.Count);
 

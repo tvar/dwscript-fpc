@@ -136,9 +136,8 @@ begin
          if Copy(ExtractFileName(FTests[i]), 1, 11)='div_by_zero' then continue;
          {$endif}
 
-         source.LoadFromFile(FTests[i]);
-
-         prog:=FCompiler.Compile(source.Text);
+         source.LoadFromFileUTF8(FTests[i]);
+         prog:=FCompiler.Compile(source.UnicodeText);
 
          CheckEquals(False, prog.Msgs.HasErrors, FTests[i]+#13#10+prog.Msgs.AsInfo);
 

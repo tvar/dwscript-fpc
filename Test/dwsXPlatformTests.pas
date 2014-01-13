@@ -29,7 +29,8 @@ uses
 type
 
    {$ifdef FPC}
-   TTestCase = class (fpcunit.TTestCase)
+   TTestCaseFPC = fpcunit.TTestCase;
+   TTestCase = class (TTestCaseFPC)
       public
          procedure CheckEquals(const expected, actual: UnicodeString; const msg: String = ''); overload;
          procedure CheckEquals(const expected : String; const actual: UnicodeString; const msg: String = ''); overload;

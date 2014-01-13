@@ -480,7 +480,7 @@ const
 var
    prog : IdwsProgram;
    opts : TCompilerOptions;
-   buf : String;
+   buf : UnicodeString;
 begin
    opts:=FCompiler.Config.CompilerOptions;
    FCompiler.Config.CompilerOptions:=opts+[coSymbolDictionary];

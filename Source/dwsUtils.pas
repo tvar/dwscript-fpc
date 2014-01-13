@@ -734,6 +734,15 @@ procedure VariantToString(const v : Variant; var s : UnicodeString);
 
 procedure SuppressH2077ValueAssignedToVariableNeverUsed(const X); inline;
 
+type
+
+  { TStringListHelper }
+
+  TStringListHelper = class helper for TStrings
+    procedure LoadFromFileUTF8(const FileName: string);
+    function UnicodeText: UnicodeString;
+  end;
+
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
@@ -1214,6 +1223,31 @@ begin
    pDest:=PWordArray(Pointer(result));
    for i:=0 to n-1 do
       pDest[i]:=Word(PByte(@pSrc[i])^);
+end;
+
+{ TStringListHelper }
+
+procedure TStringListHelper.LoadFromFileUTF8(const FileName: string);
+const
+  UTF8BOM: string = #$EF#$BB#$BF;
+begin
+  LoadFromFile(FileName);
+{$IFDEF FPC}
+  if Count > 0 then
+  begin
+    if Copy(Strings[0], 1, Length(UTF8BOM)) = UTF8BOM then
+      Strings[0] := Copy(Strings[0], Length(UTF8BOM) + 1, MaxInt);
+  end;
+{$ENDIF}
+end;
+
+function TStringListHelper.UnicodeText: UnicodeString;
+begin
+{$IFDEF UNICODE}
+  Result := Text;
+{$ELSE}
+  Result := UTF8Decode(Text);
+{$ENDIF}
 end;
 
 // ------------------
