@@ -1,8 +1,8 @@
 unit ULocalizerTests;
 
 interface
-
-uses Windows, Classes, SysUtils, TestFrameWork, dwsComp, dwsCompiler, dwsExprs,
+{$I dws.inc}
+uses {$IFDEF WINDOWS} Windows, {$ENDIF} Classes, SysUtils, dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs,
    dwsTokenizer, dwsXPlatform, dwsFileSystem, dwsErrors, dwsUtils, Variants,
    dwsSymbols, dwsPascalTokenizer, dwsStrings, dwsStack, dwsJSON;
 
@@ -15,7 +15,7 @@ type
       public
          procedure SetUp; override;
          procedure TearDown; override;
-         procedure DoLocalize(Sender : TObject; const aString : String; var Result : String);
+         procedure DoLocalize(Sender : TObject; const aString : UnicodeString; var Result : UnicodeString);
 
       published
          procedure SimpleTest;
@@ -49,7 +49,7 @@ end;
 
 // DoLocalize
 //
-procedure TLocalizerTests.DoLocalize(Sender : TObject; const aString : String; var Result : String);
+procedure TLocalizerTests.DoLocalize(Sender : TObject; const aString : UnicodeString; var Result : UnicodeString);
 begin
    Result:='['+aString+']';
 end;
@@ -92,6 +92,6 @@ initialization
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-   TestFramework.RegisterTest('LocalizerTests', TLocalizerTests.Suite);
+   RegisterTest('LocalizerTests', TLocalizerTests);
 
-end.
+end.

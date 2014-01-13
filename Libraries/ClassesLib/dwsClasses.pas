@@ -338,7 +338,7 @@ end;
 function TdwsStrings.GetDelimitedText: UnicodeString;
 var
   S: UnicodeString;
-  P: PChar;
+  P: PWideChar;
   I, Count: Integer;
 begin
   Count := GetCount;
@@ -350,7 +350,7 @@ begin
     for I := 0 to Count - 1 do
     begin
       S := Get(I);
-      P := PChar(S);
+      P := PWideChar(S);
       while not CharInSet(P^, [#0..' ', QuoteChar, Delimiter]) do
       {$IFDEF WINDOWS}
         P := CharNext(P);
@@ -377,7 +377,7 @@ end;
 function TdwsStrings.GetTextStr: UnicodeString;
 var
    I, L, Size, Count: Integer;
-   P: PChar;
+   P: PWideChar;
    S, LB: UnicodeString;
 begin
    Count := GetCount;
@@ -386,17 +386,17 @@ begin
    for I := 0 to Count - 1 do
       Inc(Size, Length(Get(I)) + Length(LB));
    SetString(Result, nil, Size);
-   P := Pointer(Result);
+   P := PWideChar(Result);
    for I := 0 to Count - 1 do begin
       S := Get(I);
       L := Length(S);
       if L <> 0 then begin
-         System.Move(Pointer(S)^, P^, L*SizeOf(Char));
+         System.Move(PWideChar(S)^, P^, L*SizeOf(WideChar));
          Inc(P, L);
       end;
       L := Length(LB);
       if L <> 0 then begin
-         System.Move(Pointer(LB)^, P^, L*SizeOf(Char));
+         System.Move(PWideChar(LB)^, P^, L*SizeOf(WideChar));
          Inc(P, L);
       end;
    end;

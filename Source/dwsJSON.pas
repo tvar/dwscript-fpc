@@ -537,7 +537,7 @@ begin
       end else begin
          if n>0 then begin
             SetLength(Result, n);
-            localBufferPtr:=PWideChar(Pointer(Result));
+            localBufferPtr:=PWideChar(Result);
             Move(localBuffer[0], localBufferPtr^, n*SizeOf(WideChar));
          end else Result:='';
       end;
@@ -765,7 +765,7 @@ var
    p : PWideChar;
 begin
    destStream.Write(cQUOTE, SizeOf(WideChar));
-   p:=PWideChar(Pointer(str));
+   p:=PWideChar(str);
    if p<>nil then while True do begin
       c:=p^;
       case Ord(c) of
@@ -784,10 +784,8 @@ begin
             destStream.WriteString('\"');
          Ord('\') :
             destStream.WriteString('\\');
-         {$ifndef FPC}
          $100..$FFFF :
             WriteUTF16(destStream, Ord(c));
-         {$endif}
       else
          destStream.Write(p^, SizeOf(WideChar));
       end;
@@ -1964,7 +1962,7 @@ end;
 destructor TdwsJSONImmediate.Destroy;
 begin
    if FType=jvtString then
-      PString(@FData)^:='';
+      PUnicodeString(@FData)^:='';
    inherited;
 end;
 
@@ -1975,7 +1973,7 @@ begin
    if Assigned(Self) then
       case FType of
          jvtNull : Result:='Null';
-         jvtString : Result:=PString(@FData)^;
+         jvtString : Result:=PUnicodeString(@FData)^;
          jvtNumber : Result:=FloatToStr(FData);
          jvtBoolean :
             if PBoolean(@FData)^ then
@@ -1993,7 +1991,7 @@ procedure TdwsJSONImmediate.SetAsString(const val : UnicodeString);
 begin
    if FType<>jvtString then
       PPointer(@FData)^:=nil;
-   PString(@FData)^:=val;
+   PUnicodeString(@FData)^:=val;
    FType:=jvtString;
 end;
 
@@ -2013,7 +2011,7 @@ begin
    if val<>GetIsNull then begin
       if val then begin
          if FType=jvtString then
-            PString(@FData)^:='';
+            PUnicodeString(@FData)^:='';
          FType:=jvtNull;
       end else AsString:='';
    end;
@@ -2027,7 +2025,7 @@ begin
    case FType of
       jvtBoolean : Result:=PBoolean(@FData)^;
       jvtNumber : Result:=(FData<>0);
-      jvtString : Result:=(PString(@FData)^='true');
+      jvtString : Result:=(PUnicodeString(@FData)^='true');
    else
       Result:=False;
    end;
@@ -2038,7 +2036,7 @@ end;
 procedure TdwsJSONImmediate.SetAsBoolean(const val : Boolean);
 begin
    if FType=jvtString then
-      PString(@FData)^:='';
+      PUnicodeString(@FData)^:='';
    PBoolean(@FData)^:=val;
    FType:=jvtBoolean;
 end;
@@ -2051,7 +2049,7 @@ begin
    case FType of
       jvtBoolean : if PBoolean(@FData)^ then Result:=-1 else Result:=0;
       jvtNumber : Result:=FData;
-      jvtString : Result:=StrToFloatDef(PString(@FData)^, 0)
+      jvtString : Result:=StrToFloatDef(PUnicodeString(@FData)^, 0)
    else
       Result:=0;
    end;
@@ -2062,7 +2060,7 @@ end;
 procedure TdwsJSONImmediate.SetAsNumber(const val : Double);
 begin
    if FType=jvtString then
-      PString(@FData)^:='';
+      PUnicodeString(@FData)^:='';
    FData:=val;
    FType:=jvtNumber;
 end;
@@ -2133,7 +2131,7 @@ begin
    Result:=vImmediate.Create;
    TdwsJSONImmediate(Result).FType:=FType;
    if FType=jvtString then
-      PString(@TdwsJSONImmediate(Result).FData)^:=PString(@FData)^
+      PUnicodeString(@TdwsJSONImmediate(Result).FData)^:=PUnicodeString(@FData)^
    else PInt64(@TdwsJSONImmediate(Result).FData)^:=PInt64(@FData)^;
 end;
 
@@ -2165,7 +2163,7 @@ begin
       jvtNumber :
          writer.WriteNumber(FData);
       jvtString :
-         writer.WriteString(PString(@FData)^);
+         writer.WriteString(PUnicodeString(@FData)^);
    else
       Assert(False, 'Unsupported type');
    end;
@@ -2221,7 +2219,7 @@ function TdwsJSONImmediate.GetAsVariant : Variant;
 begin
    case FType of
       jvtNull : Result:=Null;
-      jvtString : Result:=PString(@FData)^;
+      jvtString : Result:=PUnicodeString(@FData)^;
       jvtNumber : Result:=FData;
       jvtBoolean : Result:=PBoolean(@FData)^;
    else

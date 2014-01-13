@@ -183,6 +183,7 @@ var
    prog : IdwsProgram;
    exec : IdwsProgramExecution;
    func : IInfo;
+   s1: AnsiString;
 begin
    prog:=FCompiler.Compile( 'var s = TStrings.Create;'#13#10
                            +'s.Add("Line 1");'#13#10
@@ -198,12 +199,12 @@ begin
    try
       exec.RunProgram(0);
 
-      CheckEquals('Line 1'#13#10'Line 2'#13#10, exec.Result.ToString);
+      CheckEquals('Line 1' + sLineBreak + 'Line 2' + sLineBreak, exec.Result.ToString);
 
       func:=exec.Info.Func['MyProc'];
       func.Call([]);
-
-      CheckEquals('Line 1'#13#10'Line 2'#13#10'2', exec.Result.ToString);
+      s1 := 'Line 1' + sLineBreak + 'Line 2' + sLineBreak + '2';
+      CheckEquals(s1, exec.Result.ToString);
    finally
       exec.EndProgram;
    end;
@@ -219,4 +220,4 @@ initialization
 
    RegisterTest('dwsClassesLibTests', TdwsClassesTests);
 
-end.
+end.

@@ -203,15 +203,11 @@ var
 begin
    json:=TdwsJSONValue.ParseString('"\u044F\u00aA"');
    CheckEquals(TdwsJSONImmediate.ClassName, json.ClassName, 'TdwsJSONImmediate');
-   {$ifdef FPC}
-   CheckEquals(UTF8Encode(WideChar($44f)+WideChar($aa)), TdwsJSONImmediate(json).AsString, 'unicode');
-   {$else}
    CheckEquals(WideChar($44f)+WideChar($aa), TdwsJSONImmediate(json).AsString, 'unicode');
-   {$endif}
    json.Free;
 
    json:=TdwsJSONObject.Create;
-   TdwsJSONObject(json).AddValue('test', #$1234#$ABCD);
+   TdwsJSONObject(json).AddValue('test', WideChar($1234) + WideChar($ABCD));
    CheckEquals('{"test":"\u1234\uABCD"}', json.ToString, 'encode');
    json.Free;
 end;
@@ -734,4 +730,4 @@ initialization
 
    RegisterTest('JSONTests', TdwsJSONTests);
 
-end.
+end.
