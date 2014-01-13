@@ -3,7 +3,7 @@ unit UCornerCasesTests;
 interface
 
 uses
-   Windows, Classes, SysUtils,
+   {$ifdef Windows} Windows, {$endif} Classes, SysUtils,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
    dwsTokenizer, dwsXPlatform, dwsFileSystem, dwsErrors, dwsUtils, Variants,
    dwsSymbols, dwsPascalTokenizer, dwsStrings, dwsJSON;
@@ -108,6 +108,19 @@ type
          constructor Create(const prog : IdwsProgram; timeOut : Integer);
          procedure Execute; override;
    end;
+
+ function GetTemporaryFilesPath : String;
+ var
+    n: Integer;
+ begin
+ {$ifdef FPC}
+   Result := GetTempDir;
+ {$else}
+    SetLength(Result, MAX_PATH);
+    n:=GetTempPath(MAX_PATH-1, PChar(Result));
+    SetLength(Result, n);
+ {$endif}
+ end;
 
 // Create
 //
@@ -317,16 +330,6 @@ end;
 // IncludeViaFile
 //
 procedure TCornerCasesTests.IncludeViaFile;
-
-   function GetTemporaryFilesPath : String;
-   var
-      n: Integer;
-   begin
-      SetLength(Result, MAX_PATH);
-      n:=GetTempPath(MAX_PATH-1, PChar(Result));
-      SetLength(Result, n);
-   end;
-
 var
    prog : IdwsProgram;
    exec : IdwsProgramExecution;
@@ -374,16 +377,6 @@ end;
 // IncludeViaFileRestricted
 //
 procedure TCornerCasesTests.IncludeViaFileRestricted;
-
-   function GetTemporaryFilesPath : String;
-   var
-      n: Integer;
-   begin
-      SetLength(Result, MAX_PATH);
-      n:=GetTempPath(MAX_PATH-1, PChar(Result));
-      SetLength(Result, n);
-   end;
-
 var
    prog : IdwsProgram;
    exec : IdwsProgramExecution;
@@ -1717,4 +1710,4 @@ initialization
 
    RegisterTest('CornerCasesTests', TCornerCasesTests);
 
-end.
+end.

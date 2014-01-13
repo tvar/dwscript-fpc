@@ -3,7 +3,7 @@ unit UMemoryTests;
 interface
 
 uses
-   Classes, SysUtils, Types, Variants, ComObj,
+   Classes, SysUtils, Types, Variants, {$ifdef Windows} ComObj, {$endif}
    dwsXPlatform, dwsUtils,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsSymbols;
 
@@ -314,4 +314,4 @@ initialization
 
    RegisterTest('MemoryTests', TMemoryTests);
 
-end.
+end.

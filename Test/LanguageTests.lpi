@@ -129,10 +129,12 @@
       <Unit18>
         <Filename Value="UTestDispatcher.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UTestDispatcher"/>
       </Unit18>
       <Unit19>
         <Filename Value="UDebuggerTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UDebuggerTests"/>
       </Unit19>
       <Unit20>
         <Filename Value="UdwsUtilsTests.pas"/>
@@ -142,6 +144,7 @@
       <Unit21>
         <Filename Value="UMemoryTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UMemoryTests"/>
       </Unit21>
       <Unit22>
         <Filename Value="UBuildTests.pas"/>
@@ -234,4 +237,4 @@
       </Item3>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>

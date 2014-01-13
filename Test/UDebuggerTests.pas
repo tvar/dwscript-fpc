@@ -3,7 +3,7 @@ unit UDebuggerTests;
 interface
 
 uses
-   Classes, SysUtils, Variants, ComObj,
+   Classes, SysUtils, Variants, {$ifdef Windows} ComObj, {$endif}
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsErrors,
    dwsUtils, dwsSymbols, dwsDebugger, dwsStrings;
 
@@ -475,4 +475,4 @@ initialization
 
    RegisterTest('DebuggerTests', TDebuggerTests);
 
-end.
+end.

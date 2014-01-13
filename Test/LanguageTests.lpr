@@ -10,7 +10,8 @@ uses
 {$IFNDEF FPC}
   TestFrameWork, Windows,
 {$ELSE}
-  LCLIntf, LCLType, LMessages, Interfaces, Windows,
+  {$IFDEF WINDOWS} Windows, {$ELSE} cthreads, {$ENDIF} 
+  LCLIntf, LCLType, LMessages, Interfaces,
 {$ENDIF}
   Classes,
   Forms,
@@ -56,8 +57,6 @@ var
    procAffinity, systAffinity : NativeUInt;
 begin
    DirectSet8087CW($133F);
-   GetProcessAffinityMask(GetCurrentProcess, procAffinity, systAffinity);
-   SetProcessAffinityMask(GetCurrentProcess, systAffinity);
    SetDecimalSeparator('.');
 //   ReportMemoryLeaksOnShutdown:=True;
    Application.Initialize;

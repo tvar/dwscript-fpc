@@ -3,7 +3,7 @@ unit UTestDispatcher;
 interface
 
 Uses
- Windows, SysUtils, ActiveX, Variants, ComObj, dwsExprs, dwsFunctions;
+ {$ifdef Windows} Windows, ActiveX, ComObj, {$endif} SysUtils, Variants, dwsExprs, dwsFunctions;
 
 Type
 
@@ -94,8 +94,10 @@ Var
  //
 
 Begin
-
- If (Flags and DISPATCH_METHOD) = DISPATCH_METHOD Then
+{$IFNDEF WINDOWS}
+  Assert(False);
+{$ELSE}
+  If (Flags and DISPATCH_METHOD) = DISPATCH_METHOD Then
   Begin
 
    If TDispParams(AParams).cNamedArgs > 0 Then
@@ -139,7 +141,7 @@ Begin
    End
   Else
    Result := DISP_E_MEMBERNOTFOUND;
-
+{$ENDIF}
 End;
 //
 
