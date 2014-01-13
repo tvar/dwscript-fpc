@@ -30,7 +30,7 @@ type
 
    TdwsGUIDDataBase = class (TdwsDataBase, IdwsDataBase)
       public
-         constructor Create(const parameters : array of String);
+         constructor Create(const parameters : TStringDynArray);
 
          procedure BeginTransaction;
          procedure Commit;
@@ -137,7 +137,7 @@ end;
 
 // Create
 //
-constructor TdwsGUIDDataBase.Create(const parameters : array of String);
+constructor TdwsGUIDDataBase.Create(const parameters : TStringDynArray);
 begin
    // nothing
 end;
@@ -319,4 +319,4 @@ initialization
 
    TdwsDatabase.RegisterDriver('GUID', TdwsGUIDBaseFactory.Create);
 
-end.
+end.

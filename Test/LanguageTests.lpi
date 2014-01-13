@@ -112,6 +112,7 @@
       <Unit14>
         <Filename Value="..\Libraries\ClassesLib\dwsClasses.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="dwsClasses"/>
       </Unit14>
       <Unit15>
         <Filename Value="UdwsDataBaseTests.pas"/>
@@ -163,6 +164,7 @@
       <Unit25>
         <Filename Value="UJSONTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UJSONTests"/>
       </Unit25>
       <Unit26>
         <Filename Value="UJSONConnectorTests.pas"/>
@@ -225,7 +227,7 @@
     </Other>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="3">
+    <Exceptions Count="5">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -235,6 +237,12 @@
       <Item3>
         <Name Value="EFOpenError"/>
       </Item3>
+      <Item4>
+        <Name Value="EdwsJSONParseError"/>
+      </Item4>
+      <Item5>
+        <Name Value="EdwsJSONWriterError"/>
+      </Item5>
     </Exceptions>
   </Debugging>
 </CONFIG>

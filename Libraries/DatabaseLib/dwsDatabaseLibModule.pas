@@ -132,8 +132,11 @@ type
       Intf : IdwsDataField;
    end;
 
+   TSimpleQueueIdwsDataBase = TSimpleQueue<IdwsDataBase>;
+   TSimpleNameObjectHashTSimpleQueueIdwsDataBase = TSimpleNameObjectHash<TSimpleQueueIdwsDataBase>;
+
 var
-   vPools : TSimpleNameObjectHash<TSimpleQueue<IdwsDataBase>>;
+   vPools : TSimpleNameObjectHashTSimpleQueueIdwsDataBase;
    vPoolsCS : TMultiReadSingleWrite;
    vPoolsCount : Integer;
 
@@ -240,7 +243,7 @@ procedure TdwsDatabaseLib.DataModuleCreate(Sender: TObject);
 begin
    vPoolsCS.BeginWrite;
    if vPoolsCount=0 then
-      vPools:=TSimpleNameObjectHash<TSimpleQueue<IdwsDataBase>>.Create;
+      vPools:=TSimpleNameObjectHashTSimpleQueueIdwsDataBase.Create;
    Inc(vPoolsCount);
    vPoolsCS.EndWrite;
 end;
@@ -689,4 +692,4 @@ finalization
    vPoolsCS.Free;
    vPoolsCS:=nil;
 
-end.
+end.

@@ -1,16 +1,15 @@
 program LanguageTests;
 
-{$IFDEF FPC}
-  {$MODE Delphi}
+{$I dws.inc}
+{$IFDEF WINDOWS}
+  {$SetPEFlags $0001}
 {$ENDIF}
-
-{$SetPEFlags $0001}
 
 uses
 {$IFNDEF FPC}
   TestFrameWork, Windows,
 {$ELSE}
-  {$IFDEF WINDOWS} Windows, {$ELSE} cthreads, {$ENDIF} 
+  {$IFDEF WINDOWS} Windows, {$ELSE} cthreads, {$ENDIF}
   LCLIntf, LCLType, LMessages, Interfaces,
 {$ENDIF}
   Classes,
@@ -38,17 +37,20 @@ uses
   UMemoryTests in 'UMemoryTests.pas',
   UBuildTests in 'UBuildTests.pas',
   USourceUtilsTests in 'USourceUtilsTests.pas',
-//  ULocalizerTests in 'ULocalizerTests.pas',
+  ULocalizerTests in 'ULocalizerTests.pas',
 //  dwsRTTIFunctions,
-//  UJSONTests in 'UJSONTests.pas',
+  UJSONTests in 'UJSONTests.pas',
 //  UJSONConnectorTests in 'UJSONConnectorTests.pas',
 //  UTokenizerTests in 'UTokenizerTests.pas',
 //  ULanguageExtensionTests in 'ULanguageExtensionTests.pas',
-  dwsSuggestions in '..\Source\SourceUtils\dwsSuggestions.pas'
 //  UJITTests in 'UJITTests.pas',
 //  UJITx86Tests in 'UJITx86Tests.pas',
 //  ULinqTests in 'ULinqTests.pas',
-//  ULinqJsonTests in 'ULinqJsonTests.pas'
+//  ULinqJsonTests in 'ULinqJsonTests.pas',
+  dwsDatabase in '..\Libraries\DatabaseLib\dwsDatabase.pas',
+  dwsDatabaseLibModule in '..\Libraries\DatabaseLib\dwsDatabaseLibModule.pas',
+  dwsGUIDDatabase in '..\Libraries\DatabaseLib\dwsGUIDDatabase.pas',
+  dwsSuggestions in '..\Source\SourceUtils\dwsSuggestions.pas'
 ;
 
 {.$R *.res}
@@ -63,4 +65,4 @@ begin
    Application.CreateForm(TGUITestRunner, TestRunner);
    Application.Run
 end.
-
+
