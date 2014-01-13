@@ -10,10 +10,12 @@ backup/
 
 #Ignore Lib dir
 Lazarus/lib
+/lib
 
 #Ignore lazarus generated files
 Lazarus/*.pas
 Lazarus/Makefile*
+*.lps
 
 *.dcu
 __history/
