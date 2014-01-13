@@ -23,3 +23,9 @@ __history/
 *.local
 *.identcache
 Delphi*/*.res
+dcu/
+bin/
+*.~*
+
+Test/*.res
+*.dproj
