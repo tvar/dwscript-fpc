@@ -1,0 +1,2 @@
+Syntax Error: Incompatible types: "Float" and "Integer" [line: 8, column: 7]
+Syntax Error: Incompatible types: "Integer" and "Float" [line: 10, column: 7]

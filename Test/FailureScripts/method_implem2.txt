@@ -1,0 +1,1 @@
+Syntax Error: "Hello" is not a method of class "TObject" [line: 1, column: 19]

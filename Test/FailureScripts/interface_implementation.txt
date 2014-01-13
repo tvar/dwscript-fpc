@@ -1,0 +1,2 @@
+Syntax Error: Unexpected implementation in interface section [line: 8, column: 8]
+Syntax Error: Unexpected implementation in interface section [line: 13, column: 20]

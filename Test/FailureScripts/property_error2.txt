@@ -1,0 +1,4 @@
+Syntax Error: Constant expression expected [line: 7, column: 40]
+Syntax Error: Function expected [line: 8, column: 58]
+Syntax Error: Procedure expected [line: 8, column: 70]
+Syntax Error: Colon ":" expected [line: 10, column: 22]
