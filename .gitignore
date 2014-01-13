@@ -1,0 +1,23 @@
+#Ignore source repo files
+.svn
+
+#Ignore fpc files
+*.ppu
+
+#Lazarus back files
+*.bak
+backup/
+
+#Ignore Lib dir
+Lazarus/lib
+
+#Ignore lazarus generated files
+Lazarus/*.pas
+Lazarus/Makefile*
+
+*.dcu
+__history/
+*.dsk
+*.local
+*.identcache
+Delphi*/*.res
