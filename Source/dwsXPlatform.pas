@@ -329,7 +329,11 @@ end;
 //
 function UnicodeCompareStr(const S1, S2 : UnicodeString) : Integer;
 begin
-   Result:=CompareStr(S1, S2);
+{$ifdef FPC}
+  Result:=SysUtils.UnicodeCompareStr(s1,s2);
+{$else}
+  Result:=CompareStr(S1, S2);
+{$endif}
 end;
 
 {$endif} // FPC
@@ -339,7 +343,7 @@ end;
 function AnsiCompareText(const S1, S2: UnicodeString) : Integer;
 begin
    {$ifdef FPC}
-   Result:=widestringmanager.CompareTextUnicodeStringProc(s1,s2);
+   Result:=SysUtils.UnicodeCompareText(s1,s2);
    {$else}
    Result:=SysUtils.AnsiCompareText(S1, S2);
    {$endif}
@@ -350,7 +354,7 @@ end;
 function AnsiCompareStr(const S1, S2: UnicodeString) : Integer;
 begin
    {$ifdef FPC}
-   Result:=widestringmanager.CompareUnicodeStringProc(s1,s2);
+   Result:=SysUtils.UnicodeCompareStr(s1,s2);
    {$else}
    Result:=SysUtils.AnsiCompareStr(S1, S2);
    {$endif}
@@ -361,25 +365,26 @@ end;
 function UnicodeComparePChars(p1 : PWideChar; n1 : Integer; p2 : PWideChar; n2 : Integer) : Integer;
 const
    CSTR_EQUAL = 2;
+var
+   v1, v2: UnicodeString;
 begin
 {$IFDEF WINDOWS}
    Result:=CompareStringW(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n1, p2, n2)-CSTR_EQUAL;
 {$ELSE}
-  Assert(false);
+   {!!!VERY STUPID CODE!!!}
+   SetLength(v1, n1);
+   Move(p1^, PWideChar(v1)^, n1*SizeOf(WideChar));
+   SetLength(v2, n2);
+   Move(p2^, PWideChar(v2)^, n2*SizeOf(WideChar));
+   Result := SysUtils.UnicodeCompareText(v1, v2);
 {$ENDIF}
 end;
 
 // UnicodeComparePChars
 //
 function UnicodeComparePChars(p1, p2 : PWideChar; n : Integer) : Integer; overload;
-const
-   CSTR_EQUAL = 2;
 begin
-{$IFDEF WINDOWS}
-   Result:=CompareStringW(LOCALE_USER_DEFAULT, NORM_IGNORECASE, p1, n, p2, n)-CSTR_EQUAL;
-{$ELSE}
-  Assert(false);
-{$ENDIF}
+  Result := UnicodeComparePChars(p1, n, p2, n);
 end;
 
 // UnicodeLowerCase
