@@ -10,14 +10,22 @@ backup/
 
 #Ignore Lib dir
 Lazarus/lib
+/lib
 
 #Ignore lazarus generated files
 Lazarus/*.pas
 Lazarus/Makefile*
+*.lps
 
+#Delphi generated files and out folders
 *.dcu
 __history/
 *.dsk
 *.local
 *.identcache
 Delphi*/*.res
+dcu/
+bin/
+*.~*
+Test/*.res
+*.dproj
