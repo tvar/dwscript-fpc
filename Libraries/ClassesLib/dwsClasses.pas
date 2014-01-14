@@ -1,7 +1,7 @@
 unit dwsClasses;
 
 interface
-{$i ..\Source\dws.inc}
+{$i ..\..\Source\dws.inc}
 uses {$IFDEF WINDOWS} Windows, {$ENDIF} SysUtils, Classes;
 
 type
@@ -353,7 +353,7 @@ begin
       P := PWideChar(S);
       while not CharInSet(P^, [#0..' ', QuoteChar, Delimiter]) do
       {$IFDEF WINDOWS}
-        P := CharNext(P);
+        P := CharNextW(P);
       {$ELSE}
         Inc(P);
       {$ENDIF}
@@ -956,4 +956,4 @@ begin
   end;
 end;
 
-end.
+end.
