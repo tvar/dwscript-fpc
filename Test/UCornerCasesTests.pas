@@ -1,7 +1,7 @@
 unit UCornerCasesTests;
 
 interface
-
+{$I ..\Source\dws.inc}
 uses
    {$ifdef Windows} Windows, {$endif} Classes, SysUtils,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
