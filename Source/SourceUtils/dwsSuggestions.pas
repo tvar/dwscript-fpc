@@ -432,6 +432,7 @@ function TdwsSuggestions.CreateHelper(const name : UnicodeString; resultType : T
 var
    i : Integer;
    p : TParamSymbol;
+   vParamName: String;
 begin
    if resultType=nil then
       Result:=TFuncSymbol.Create(name, fkProcedure, 0)
@@ -439,10 +440,15 @@ begin
       Result:=TFuncSymbol.Create(name, fkFunction, 0);
       Result.Typ:=resultType;
    end;
-   for i:=0 to (Length(args) div 2)-1 do begin
-      Assert(args[i*2].VType=vtUnicodeString);
+   for i:=0 to (Length(args) div 2)-1 do
+   begin
+      case args[i*2].VType of
+         vtUnicodeString: vParamName := UnicodeString(args[i*2].VUnicodeString);
+         vtAnsiString: vParamName := AnsiString(args[i*2].VAnsiString);
+         else Assert(False, IntToStr(args[i*2].VType));
+      end;
       Assert(args[i*2+1].VType=vtObject);
-      p:=TParamSymbol.Create(UnicodeString(args[i*2].VUnicodeString), TObject(args[i*2+1].VObject) as TTypeSymbol);
+      p:=TParamSymbol.Create(vParamName, TObject(args[i*2+1].VObject) as TTypeSymbol);
       Result.Params.AddSymbol(p);
    end;
 end;
@@ -1111,4 +1117,4 @@ begin
    end;
 end;
 
-end.
+end.
