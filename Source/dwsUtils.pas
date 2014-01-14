@@ -177,6 +177,16 @@ type
 
 //   TSimpleCallback<T> = function (var item : T) : TSimpleCallbackStatus;
 
+   { TDefault FPC Default<T> emulator}
+
+   TDefault<T> = class
+   {$IFDEF FPC}
+   private
+     class var DefaultT: T;
+   {$ENDIF}
+   public
+     class function Value: T;
+   end;
    // TSimpleList<T>
    //
    {: A minimalistic generic list class. }
@@ -185,6 +195,7 @@ type
       type
          ArrayT = array of T;
          TSimpleCallback = function (var item : T) : TSimpleCallbackStatus;
+         DefaultT = TDefault<T>;
       var
          FItems : ArrayT;
          FCount : Integer;
@@ -530,6 +541,7 @@ type
             Prev, Next : PItemT;
             Value : T;
          end;
+         DefaultT = TDefault<T>;
       var
          FFirst, FLast : PItemT;
          FCount : Integer;
@@ -1223,6 +1235,17 @@ begin
    pDest:=PWordArray(Pointer(result));
    for i:=0 to n-1 do
       pDest[i]:=Word(PByte(@pSrc[i])^);
+end;
+
+{ TDefault<T> }
+
+class function TDefault<T>.Value: T;
+begin
+{$IFDEF FPC}
+  Result := DefaultT;
+{$ELSE}
+  Result := Default(T);
+{$ENDIF}
 end;
 
 { TStringListHelper }
@@ -3134,9 +3157,7 @@ procedure TSimpleList<T>.Extract(idx : Integer);
 var
    n : Integer;
 begin
-{$IFNDEF FPC}
-   FItems[idx]:=Default(T);
-{$ENDIF}
+   FItems[idx] := DefaultT.Value;
    n:=FCount-idx-1;
    if n>0 then begin
       Move(FItems[idx+1], FItems[idx], n*SizeOf(T));
@@ -3992,9 +4013,7 @@ end;
 //
 procedure TSimpleQueue<T>.Release(i: PItemT);
 begin
-{$IFNDEF FPC}
-   i.Value:=Default(T);
-{$ENDIF}
+   i.Value := DefaultT.Value;
    if FPoolLeft>0 then begin
       Dec(FPoolLeft);
       i.Prev:=nil;
