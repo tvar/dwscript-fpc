@@ -201,6 +201,24 @@ var
    prog : IdwsProgram;
    sugg : IdwsSuggestions;
    scriptPos : TScriptPos;
+   i: Integer;
+const
+{$IFDEF FPC}  {FPC RTTI not Supported}
+   sugg9count = 5;
+{$ELSE}
+   sugg9count = 8;
+{$ENDIF}
+   sugg9: array [0..sugg9count - 1] of String = (
+     'TClass',
+     'TComplex',
+     'TCustomAttribute',
+     'TObject',
+   {$IFNDEF FPC}
+     'TRTTIRawAttribute',
+     'TRTTIRawAttributes',
+     'TRTTITypeInfo',
+   {$ENDIF}
+     'TVector');
 begin
    prog:=FCompiler.Compile('Internal.PrintL');
 
@@ -225,15 +243,9 @@ begin
 
    scriptPos.Col:=9;
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
-   CheckEquals(8, sugg.Count, 'column 9');
-   CheckEquals('TClass', sugg.Code[0], 'sugg 9, 0');
-   CheckEquals('TComplex', sugg.Code[1], 'sugg 9, 1');
-   CheckEquals('TCustomAttribute', sugg.Code[2], 'sugg 9, 2');
-   CheckEquals('TObject', sugg.Code[3], 'sugg 9, 3');
-   CheckEquals('TRTTIRawAttribute', sugg.Code[4], 'sugg 9, 4');
-   CheckEquals('TRTTIRawAttributes', sugg.Code[5], 'sugg 9, 5');
-   CheckEquals('TRTTITypeInfo', sugg.Code[6], 'sugg 9, 6');
-   CheckEquals('TVector', sugg.Code[7], 'sugg 9, 7');
+   CheckEquals(sugg9count, sugg.Count, 'column 9');
+   for i := 0 to sugg9count - 1 do
+      CheckEquals(sugg9[i], sugg.Code[i], Format('sugg 9, %i', [i]));
 end;
 
 // MetaClassTest
@@ -751,4 +763,4 @@ initialization
 
    RegisterTest('SourceUtilsTests', TSourceUtilsTests);
 
-end.
+end.
