@@ -584,13 +584,8 @@ var
 begin
    if (FDataMaster=nil) and (FTypeSym<>nil) and (FTypeSym.Size=1) then begin
       varData:=PVarData(FDataPtr.AsPVariant(0));
-      {$ifdef FPC}
-      if varData.VType=varString then begin
-         Result:=UnicodeString(varData.VString);
-      {$else}
       if varData.VType=varUString then begin
-         Result:=UnicodeString(varData.VUString);
-      {$endif}
+         Result:=UnicodeString(varData.VString);
          Exit;
       end;
    end;

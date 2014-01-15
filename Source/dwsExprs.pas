@@ -3760,13 +3760,8 @@ begin
    v:=Eval(exec);
    try
       p:=PVarData(@v);
-      {$ifdef FPC}
-      if p^.VType=varString then
-         Result:=UnicodeString(p.VString)
-      {$else}
       if p^.VType=varUString then
-         Result:=UnicodeString(p.VUString)
-      {$endif}
+         Result:=UnicodeString(p.VString)
       else VariantToString(v, Result);
    except
       // standardize RTL message
@@ -6063,13 +6058,8 @@ var
    p : PVarData;
 begin
    p:=PVarData(GetParamAsPVariant(index));
-   {$ifdef FPC}
-   if p^.VType=varString then
-      Result:=UnicodeString(p.VString)
-   {$else}
    if p^.VType=varUString then
-      Result:=UnicodeString(p.VUString)
-   {$endif}
+      Result:=UnicodeString(p.VString)
    else VariantToString(PVariant(p)^, Result);
 end;
 

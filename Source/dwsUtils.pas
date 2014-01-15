@@ -1163,13 +1163,8 @@ var
 begin
    varData:=PVarData(@v);
    case varData^.VType of
-      {$ifdef FPC}
-      varString :
-         s:=UnicodeString(varData^.VString);
-      {$else}
       varUString :
-         s:=UnicodeString(varData^.VUString);
-      {$endif}
+         s:=UnicodeString(varData^.VString);
       varInt64 :
          FastInt64ToStr(varData^.VInt64, s);
       varDouble :

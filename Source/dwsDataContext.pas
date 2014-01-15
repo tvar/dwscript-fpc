@@ -456,13 +456,8 @@ var
    p : PVarData;
 begin
    p:=@FData[FAddr+addr];
-   {$ifdef FPC}
-   if p.VType=varString then
-      UnicodeString(p.VString):=value
-   {$else}
    if p.VType=varUString then
-      UnicodeString(p.VUString):=value
-   {$endif}
+      UnicodeString(p.VString):=value
    else PVariant(p)^:=value;
 end;
 

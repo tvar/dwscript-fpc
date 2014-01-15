@@ -3032,13 +3032,8 @@ var
    p : PVarData;
 begin
    p:=PVarData(EvalItem(exec));
-   {$ifdef FPC}
-   if p.VType=varString then
-      Result:=UnicodeString(p.VString)
-   {$else}
    if p.VType=varUString then
-      Result:=UnicodeString(p.VUString)
-   {$endif}
+      Result:=UnicodeString(p.VString)
    else Result:=PVariant(p)^;
 end;
 
@@ -8675,4 +8670,4 @@ begin
    Result:=3;
 end;
 
-end.
+end.
