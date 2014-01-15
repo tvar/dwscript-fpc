@@ -550,7 +550,7 @@ var
    prog : IdwsProgram;
    exec : IdwsProgramExecution;
 begin
-   FCompiler.Config.MaxDataSize:=32;
+   FCompiler.Config.MaxDataSize:=SizeOf(Variant) * 2;
 
    prog:=FCompiler.Compile('procedure Dummy; var i : Integer; begin Dummy; end; Dummy;');
    CheckEquals('', prog.Msgs.AsInfo, 'compile');
@@ -1710,4 +1710,4 @@ initialization
 
    RegisterTest('CornerCasesTests', TCornerCasesTests);
 
-end.
+end.
