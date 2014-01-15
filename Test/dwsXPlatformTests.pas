@@ -18,7 +18,7 @@ unit dwsXPlatformTests;
 interface
 
 uses
-   Classes, SysUtils,
+   Classes, SysUtils, Math,
    {$ifdef FPC}
    fpcunit, testutils, testregistry
    {$else}
@@ -34,6 +34,7 @@ type
       public
          procedure CheckEquals(const expected, actual: UnicodeString; const msg: String = ''); overload;
          procedure CheckEquals(const expected : String; const actual: UnicodeString; const msg: String = ''); overload;
+         procedure CheckEquals(const expected, actual: Double; const msg: String = ''); overload;
    end;
 
    ETestFailure = class (Exception);
@@ -66,6 +67,16 @@ end;
 // CheckEquals
 //
 {$ifdef FPC}
+procedure TTestCase.CheckEquals(const expected, actual: Double; const msg: String = '');
+const
+   DZeroResolution = 1E-12;
+var
+   vDelta: Double;
+begin
+   vDelta:=Math.Max(Math.Min(Abs(expected),Abs(actual))*DZeroResolution,DZeroResolution);
+   AssertEquals(Msg, expected, actual, vDelta);
+end;
+
 procedure TTestCase.CheckEquals(const expected, actual: UnicodeString; const msg: String = '');
 begin
    AssertTrue(msg + ComparisonMsg(Expected, Actual), AnsiCompareStr(Expected, Actual) = 0);
