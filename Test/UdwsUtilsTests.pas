@@ -457,7 +457,7 @@ end;
 //
 procedure TdwsUtilsTests.UnifierTest;
 var
-   s1, s2 : String;
+   s1, s2 : UnicodeString;
 begin
    s1:=IntToStr(123);
    s2:=IntToStr(123);
@@ -783,4 +783,4 @@ initialization
 
    RegisterTest('UtilsTests', TdwsUtilsTests);
 
-end.
+end.
