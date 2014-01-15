@@ -1488,7 +1488,7 @@ begin
                   'FuncPoint call 2');
 
       funcInfo:=exec.Info.Func['Hello'];
-      CheckEquals('Hello world', funcInfo.Call([UnicodeString('world')]).Value, 'Hello world');
+      CheckEquals('Hello world', funcInfo.Call(['world']).Value, 'Hello world');
    finally
       exec.EndProgram;
    end;
@@ -1729,7 +1729,7 @@ begin
       CheckEquals('world', data[1], 'data 1');
 
       SetLength(myData, 1);
-      myData[0]:=UnicodeString('byebye');
+      myData[0]:='byebye';
       astr.Data:=myData;
 
       exec.Info.Func['MyTest'].Call;
@@ -2011,7 +2011,7 @@ begin
    try
       exec.RunProgram(0);
       print:=exec.Info.Func['Print'];
-      print.Call([UnicodeString('world')]);
+      print.Call(['world']);
 
       CheckEquals( 'Hello'#13#10'world',
                   exec.Result.ToString+exec.Msgs.AsInfo);
@@ -2359,4 +2359,4 @@ initialization
 
    RegisterTest('dwsUnitTests', TdwsUnitTests);
 
-end.
+end.
