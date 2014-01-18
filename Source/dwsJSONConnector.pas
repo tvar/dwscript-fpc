@@ -666,7 +666,7 @@ begin
          case pParam^.VType of
             varInt64 : baseArray.Add(pParam^.VInt64);
             varDouble : baseArray.Add(pParam^.VDouble);
-            varUString : baseArray.Add(String(pParam^.VUString));
+            varUString : baseArray.Add(String(pParam^.VString));
             varBoolean : baseArray.Add(pParam^.VBoolean);
          else
             raise EdwsJSONException.Create('JSON Array Add unsupported type');
@@ -757,7 +757,7 @@ begin
          end;
          varUString : begin
             argValue:=TdwsJSONImmediate.Create;
-            argValue.AsString:=UnicodeString(pVal^.VUString);
+            argValue.AsString:=UnicodeString(pVal^.VString);
          end;
          varBoolean : begin
             argValue:=TdwsJSONImmediate.Create;
@@ -1191,4 +1191,4 @@ finalization
 
    vNilJSONValue:=nil;
 
-end.
+end.

@@ -1,8 +1,9 @@
 unit UTokenizerTests;
 
 interface
-
-uses Windows, Classes, SysUtils, dwsXPlatformTests, dwsComp,
+{$I dws.inc}
+uses
+  {$IFDEF WINDOWS} Windows, {$ENDIF} Classes, SysUtils, dwsXPlatformTests, dwsComp,
    dwsTokenizer, dwsXPlatform, dwsErrors, dwsUtils, dwsPascalTokenizer;
 
 type
@@ -64,7 +65,7 @@ end;
 procedure TTokenizerTests.EmptyTokenBuffer;
 var
    w : TTokenBufferWrapper;
-   s : String;
+   s : UnicodeString;
 begin
    w:=TTokenBufferWrapper.Create;
    try
@@ -188,4 +189,4 @@ initialization
 
    RegisterTest('TokenizerTests', TTokenizerTests);
 
-end.
+end.

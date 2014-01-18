@@ -1,9 +1,9 @@
 unit ULanguageExtensionTests;
 
 interface
-
+{$I dws.inc}
 uses
-   Windows, Classes, SysUtils,
+   {$IFDEF WINDOWS} Windows, {$ENDIF}Classes, SysUtils,
    dwsStack,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
    dwsTokenizer, dwsXPlatform, dwsFileSystem, dwsErrors, dwsUtils, Variants,
@@ -34,7 +34,7 @@ implementation
 type
    TAutoExternalValues = class (TdwsLanguageExtension)
       public
-         function FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol; override;
+         function FindUnknownName(compiler : TdwsCompiler; const name : UnicodeString) : TSymbol; override;
    end;
 
    TCallableAutoExternal = class(TdwsCallable)
@@ -63,7 +63,7 @@ end;
 
 // FindUnknownName
 //
-function TAutoExternalValues.FindUnknownName(compiler : TdwsCompiler; const name : String) : TSymbol;
+function TAutoExternalValues.FindUnknownName(compiler : TdwsCompiler; const name : UnicodeString) : TSymbol;
 var
    externalSym : TExternalVarSymbol;
    readFunc : TFuncSymbol;
@@ -134,4 +134,4 @@ initialization
 
    RegisterTest('LanguageExtensionTests', TLanguageExtensionTests);
 
-end.
+end.

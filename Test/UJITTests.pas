@@ -18,8 +18,8 @@ type
          FFixups : TFixupLogic;
 
       protected
-         procedure DoInclude(const scriptName: string; var scriptSource: string);
-         function  DoNeedUnit(const unitName : String; var unitSource : String) : IdwsUnit;
+         procedure DoInclude(const scriptName: UnicodeString; var scriptSource: UnicodeString);
+         function  DoNeedUnit(const unitName : UnicodeString; var unitSource : UnicodeString) : IdwsUnit;
 
          function GetStreamPosition : Integer;
 
@@ -104,7 +104,7 @@ end;
 
 // DoInclude
 //
-procedure TJITTests.DoInclude(const scriptName: string; var scriptSource: string);
+procedure TJITTests.DoInclude(const scriptName: UnicodeString; var scriptSource: UnicodeString);
 var
    sl : TStringList;
 begin
@@ -119,7 +119,7 @@ end;
 
 // DoNeedUnit
 //
-function TJITTests.DoNeedUnit(const unitName : String; var unitSource : String) : IdwsUnit;
+function TJITTests.DoNeedUnit(const unitName : UnicodeString; var unitSource : UnicodeString) : IdwsUnit;
 var
    sl : TStringList;
    fName : String;
@@ -397,4 +397,4 @@ initialization
 
    RegisterTest('jitTests', TJITTests);
 
-end.
+end.
