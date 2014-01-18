@@ -169,10 +169,12 @@
       <Unit26>
         <Filename Value="UJSONConnectorTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UJSONConnectorTests"/>
       </Unit26>
       <Unit27>
         <Filename Value="UTokenizerTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UTokenizerTests"/>
       </Unit27>
       <Unit28>
         <Filename Value="ULanguageExtensionTests.pas"/>
@@ -182,14 +184,17 @@
       <Unit29>
         <Filename Value="UJITTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UJITTests"/>
       </Unit29>
       <Unit30>
         <Filename Value="UJITx86Tests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="UJITx86Tests"/>
       </Unit30>
       <Unit31>
         <Filename Value="ULinqTests.pas"/>
         <IsPartOfProject Value="True"/>
+        <UnitName Value="ULinqTests"/>
       </Unit31>
       <Unit32>
         <Filename Value="ULinqJsonTests.pas"/>
@@ -202,10 +207,11 @@
     <PathDelim Value="\"/>
     <SearchPaths>
       <IncludeFiles Value="..\Source;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\Source;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib"/>
+      <OtherUnitFiles Value="..\Source;..\Tools\BeaEngine;..\Source\jitter;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib"/>
       <UnitOutputDirectory Value="..\lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
+      <Style Value="1"/>
       <SyntaxOptions>
         <SyntaxMode Value="Delphi"/>
         <IncludeAssertionCode Value="True"/>

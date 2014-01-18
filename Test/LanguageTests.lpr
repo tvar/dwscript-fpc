@@ -9,7 +9,7 @@ uses
 {$IFNDEF FPC}
   TestFrameWork, Windows,
 {$ELSE}
-  {$IFDEF WINDOWS} Windows, {$ELSE} cthreads, {$ENDIF}
+  {$IFDEF WINDOWS} Windows, {$ELSE} cthreads, cmem, {$ENDIF}
   LCLIntf, LCLType, LMessages, Interfaces,
 {$ENDIF}
   Classes,
@@ -40,13 +40,15 @@ uses
   ULocalizerTests in 'ULocalizerTests.pas',
 //  dwsRTTIFunctions,
   UJSONTests in 'UJSONTests.pas',
-//  UJSONConnectorTests in 'UJSONConnectorTests.pas',
-//  UTokenizerTests in 'UTokenizerTests.pas',
-//  ULanguageExtensionTests in 'ULanguageExtensionTests.pas',
-//  UJITTests in 'UJITTests.pas',
-//  UJITx86Tests in 'UJITx86Tests.pas',
+  UJSONConnectorTests in 'UJSONConnectorTests.pas',
+  UTokenizerTests in 'UTokenizerTests.pas',
+  ULanguageExtensionTests in 'ULanguageExtensionTests.pas',
+  UJITTests in 'UJITTests.pas',
+{$IFDEF CPU32}
+  //UJITx86Tests in 'UJITx86Tests.pas',
+{$ENDIF}
 //  ULinqTests in 'ULinqTests.pas',
-//  ULinqJsonTests in 'ULinqJsonTests.pas',
+  ULinqJsonTests in 'ULinqJsonTests.pas',
   dwsDatabase in '..\Libraries\DatabaseLib\dwsDatabase.pas',
   dwsDatabaseLibModule in '..\Libraries\DatabaseLib\dwsDatabaseLibModule.pas',
   dwsGUIDDatabase in '..\Libraries\DatabaseLib\dwsGUIDDatabase.pas',
@@ -55,12 +57,9 @@ uses
 
 {.$R *.res}
 
-var
-   procAffinity, systAffinity : NativeUInt;
 begin
    DirectSet8087CW($133F);
    SetDecimalSeparator('.');
-//   ReportMemoryLeaksOnShutdown:=True;
    Application.Initialize;
    Application.CreateForm(TGUITestRunner, TestRunner);
    Application.Run
