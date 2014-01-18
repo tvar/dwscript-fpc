@@ -111,7 +111,7 @@ begin
    repeat
       len:=Disasm(d);
       if len>0 then begin
-         FStream.WriteString(UTF8ToString(StrPas(d.CompleteInstr)));
+         FStream.WriteString(UTF8Decode(StrPas(d.CompleteInstr)));
          FStream.WriteCRLF;
          d.EIP:=d.EIP+len;
          d.SecurityBlock:=blockEnd-d.EIP;

@@ -45,7 +45,9 @@ uses
   ULanguageExtensionTests in 'ULanguageExtensionTests.pas',
   UJITTests in 'UJITTests.pas',
 {$IFDEF CPU32}
-  //UJITx86Tests in 'UJITx86Tests.pas',
+  {$IFDEF WINDOWS}
+  UJITx86Tests in 'UJITx86Tests.pas',
+  {$ENDIF}
 {$ENDIF}
 //  ULinqTests in 'ULinqTests.pas',
   ULinqJsonTests in 'ULinqJsonTests.pas',
@@ -64,4 +66,4 @@ begin
    Application.CreateForm(TGUITestRunner, TestRunner);
    Application.Run
 end.
-
+

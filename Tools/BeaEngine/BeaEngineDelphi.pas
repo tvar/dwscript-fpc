@@ -15,7 +15,9 @@ unit BeaEngineDelphi;
 // Default link type is static lib
 // comment below line to switch link with DLL
 // ====================================================================
-// {$DEFINE USEDLL}
+{$IFDEF FPC}
+  {$DEFINE USEDLL}
+{$ENDIF}
 // ====================================================================
 // Copyright 2006-2009, BeatriX
 // File coded by BeatriX
@@ -361,9 +363,9 @@ function BeaEngineRevision:longint;stdcall;external;
 
 {$ELSE}
 
-function Disasm(var aDisAsm:TDISASM):longint;stdcall;external 'BeaEngine.DLL' name '_Disasm@4';
-function BeaEngineVersion:longint;stdcall;external 'BeaEngine.DLL' name '_BeaEngineVersion@0';
-function BeaEngineRevision:longint;stdcall;external 'BeaEngine.DLL' name '_BeaEngineRevision@0';
+function Disasm(var aDisAsm:TDISASM):longint;stdcall;external 'BeaEngine32.DLL' name '_Disasm@4';
+function BeaEngineVersion:longint;stdcall;external 'BeaEngine32.DLL' name '_BeaEngineVersion@0';
+function BeaEngineRevision:longint;stdcall;external 'BeaEngine32.DLL' name '_BeaEngineRevision@0';
 
 {$ENDIF}
 
