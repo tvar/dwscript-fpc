@@ -8,6 +8,8 @@ uses
    dwsJson, dwsUtils;
 
 type
+   TObjectListdwsJSONObject = TObjectList<TdwsJSONObject>;
+   TObjectListdwsJSONArray = TObjectList<TdwsJSONArray>;
    TLinqJsonExtension = class(TComponent)
    private
       FLinqFactory: TdwsLinqFactory;
@@ -96,7 +98,7 @@ type
    TJsonSelectFilter = class(TJsonFilter)
    private
       procedure SelectFilter(arr: TdwsJsonArray);
-      procedure ApplyFilter(objects: TObjectList<TdwsJSONObject>);
+      procedure ApplyFilter(objects: TObjectListdwsJSONObject);
       procedure SelectGroupFilter(obj: TdwsJSONObject);
    public
       function EvalAsJson(exec : TdwsExecution): TdwsJsonValue; override;
@@ -486,7 +488,7 @@ end;
 
 { TJsonSelectFilter }
 
-procedure TJsonSelectFilter.ApplyFilter(objects: TObjectList<TdwsJSONObject>);
+procedure TJsonSelectFilter.ApplyFilter(objects: TObjectListdwsJSONObject);
 var
    i, j: integer;
    obj: TdwsJSONObject;
@@ -527,13 +529,13 @@ begin
    end;
 end;
 
-function CollectObjects(arrays: TObjectList<TdwsJSONArray>): TObjectList<TdwsJSONObject>;
+function CollectObjects(arrays: TObjectListdwsJSONArray): TObjectListdwsJSONObject;
 var
    arr: TdwsJSONArray;
    elem: TdwsJSONValue;
    i, j: integer;
 begin
-   result := TObjectList<TdwsJSONObject>.Create;
+   result := TObjectListdwsJSONObject.Create;
    try
       for i := 0 to arrays.Count - 1 do
       begin
@@ -556,11 +558,11 @@ end;
 
 procedure TJsonSelectFilter.SelectGroupFilter(obj: TdwsJSONObject);
 var
-   arrays: TObjectList<TdwsJSONArray>;
-   objects: TObjectList<TdwsJSONObject>;
+   arrays: TObjectListdwsJSONArray;
+   objects: TObjectListdwsJSONObject;
 begin
    objects := nil;
-   arrays := TObjectList<TdwsJSONArray>.Create;
+   arrays := TObjectListdwsJSONArray.Create;
    try
       CollectArrays(obj, arrays);
       objects := CollectObjects(arrays);
@@ -573,11 +575,11 @@ end;
 
 procedure TJsonSelectFilter.SelectFilter(arr: TdwsJsonArray);
 var
-   objects: TObjectList<TdwsJSONObject>;
+   objects: TObjectListdwsJSONObject;
    i: integer;
    elem: TdwsJSONValue;
 begin
-   objects := TObjectList<TdwsJSONObject>.Create;
+   objects := TObjectListdwsJSONObject.Create;
    try
       for i := 0 to objects.Count - 1 do
       begin
@@ -668,4 +670,4 @@ begin
       FLinqFactory.RegisterSource(@LinqJsonFactory);
 end;
 
-end.
+end.

@@ -38,6 +38,9 @@ type
          function  GetRefCount : Integer; inline;
          procedure SetRefCount(n : Integer); inline;
       public
+      {$IFDEF FPC}
+         function ToString : UnicodeString; virtual;
+      {$ENDIF}
          function  IncRefCount : Integer; inline;
          function  DecRefCount : Integer;
          property  RefCount : Integer read GetRefCount write SetRefCount;
@@ -3576,6 +3579,13 @@ begin
    {$endif}
    p^:=n;
 end;
+
+{$ifdef FPC}
+function TRefCountedObject.ToString: UnicodeString;
+begin
+  Result := Self.ClassName + '($' + IntToHex(NativeInt(Self), SizeOf(NativeInt)*2) + ')';
+end;
+{$endif}
 
 // ------------------
 // ------------------ TSimpleObjectObjectHash<T1, T2> ------------------

@@ -1,9 +1,9 @@
 unit UJSONConnectorTests;
 
 interface
-
+{$I dws.inc}
 uses
-   Windows, Classes, SysUtils, Variants,
+   {$IFDEF WINDOWS} Windows, {$ENDIF} Classes, SysUtils, Variants,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsErrors,
    dwsXPlatform, dwsUtils, dwsJSONConnector;
 
@@ -219,4 +219,4 @@ initialization
 
    RegisterTest('JSONConnectorTests', TJSONConnectorTests);
 
-end.
+end.
