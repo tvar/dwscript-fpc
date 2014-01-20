@@ -245,7 +245,7 @@ begin
    sugg:=TdwsSuggestions.Create(prog, scriptPos, [soNoReservedWords]);
    CheckEquals(sugg9count, sugg.Count, 'column 9');
    for i := 0 to sugg9count - 1 do
-      CheckEquals(sugg9[i], sugg.Code[i], Format('sugg 9, %i', [i]));
+      CheckEquals(sugg9[i], sugg.Code[i], Format('sugg 9, %d', [i]));
 end;
 
 // MetaClassTest
