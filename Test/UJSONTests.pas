@@ -125,6 +125,7 @@ var
    json : TdwsJSONValue;
    sl : TStringList;
    buf : String;
+   vPath: String;
 begin
    json:=TdwsJSONValue.ParseString('"hello"');
    CheckEquals(TdwsJSONImmediate.ClassName, json.ClassName, '"hello"');
@@ -135,10 +136,10 @@ begin
    CheckEquals(TdwsJSONObject.ClassName, json.ClassName, '"hello"');
    CheckEquals('{"hello":"world","abc":123}', json.ToString, '"hello"');
    json.Free;
-
+   vPath := ExtractFilePath(ParamStr(0)) + PathDelim + 'Data' + PathDelim;
    sl:=TStringList.Create;
    try
-      sl.LoadFromFile(ExtractFilePath(ParamStr(0))+'\Data\json.txt');
+      sl.LoadFromFile(vPath +'json.txt');
       json:=TdwsJSONValue.ParseString(sl.Text);
       CheckEquals(TdwsJSONObject.ClassName, json.ClassName, 'json.txt');
       CheckEquals(1, json.ElementCount, 'json.txt');
@@ -150,7 +151,7 @@ begin
       sl.Free;
    end;
 
-   buf:=LoadTextFromFile(ExtractFilePath(ParamStr(0))+'\Data\json2.txt');
+   buf:=LoadTextFromFile(vPath + 'json2.txt');
    json:=TdwsJSONValue.ParseString(buf);
    try
       CheckEquals(TdwsJSONArray.ClassName, json.ClassName, 'json2.txt');
