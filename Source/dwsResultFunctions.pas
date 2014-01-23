@@ -75,7 +75,7 @@ begin
    exprbase:=exprBaseListRec.ExprBase[0];
 {$ELSE}
 begin
-   exprBase:=args.List.ExprBase[0];
+   exprBase:=args.ExprBase[0];
 {$ENDIF}
    exprBaseClass:=exprBase.ClassType;
    if exprBaseClass=TConstStringExpr then begin
@@ -117,4 +117,4 @@ begin
    result.AddCRLF;
 end;
 
-end.
+end.

@@ -656,6 +656,7 @@ type
          FFlags : TFuncSymbolFlags;
          FKind : TFuncKind;
          FExternalName : UnicodeString;
+         FExternalConvention: TTokenType;
 
          procedure SetType(const Value: TTypeSymbol);
          function GetCaption : UnicodeString; override;
@@ -720,6 +721,7 @@ type
          property Kind : TFuncKind read FKind write FKind;
          property ExternalName : UnicodeString read GetExternalName write FExternalName;
          function HasExternalName : Boolean;
+         property ExternalConvention: TTokenType read FExternalConvention write FExternalConvention;
          property IsLambda : Boolean read GetIsLambda write SetIsLambda;
          property Level : SmallInt read GetLevel;
          property InternalParams : TSymbolTable read FInternalParams;
@@ -7098,4 +7100,4 @@ begin
 end;
 
 
-end.
+end.
