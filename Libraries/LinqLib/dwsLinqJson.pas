@@ -119,7 +119,7 @@ type
 implementation
 uses
    Variants, SysUtils,
-   dwsJsonConnector;
+   dwsJSONConnector;
 
 { TLinqJsonFactory }
 
