@@ -62,7 +62,6 @@
    {$DEFINE PUREPASCAL}
    {$Hints OFF}
    {$Warnings OFF}
-   {$ALIGN 4}
    {$INLINE OFF}
 {$ENDIF}
 
