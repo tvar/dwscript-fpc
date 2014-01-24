@@ -7,7 +7,7 @@ interface
 uses
    Classes, SysUtils,
    dwsXPlatformTests, dwsComp, dwsCompiler, dwsExprs, dwsDataContext,
-   dwsTokenizer, dwsErrors, dwsUtils, Variants, dwsSymbols, dwsSuggestions;
+   dwsTokenizer, dwsErrors, dwsUtils, Variants, dwsSymbols, dwsSuggestions, dwsRTTIFunctions;
 
 type
 
@@ -203,21 +203,15 @@ var
    scriptPos : TScriptPos;
    i: Integer;
 const
-{$IFDEF FPC}  {FPC RTTI not Supported}
-   sugg9count = 5;
-{$ELSE}
    sugg9count = 8;
-{$ENDIF}
    sugg9: array [0..sugg9count - 1] of String = (
      'TClass',
      'TComplex',
      'TCustomAttribute',
      'TObject',
-   {$IFNDEF FPC}
      'TRTTIRawAttribute',
      'TRTTIRawAttributes',
      'TRTTITypeInfo',
-   {$ENDIF}
      'TVector');
 begin
    prog:=FCompiler.Compile('Internal.PrintL');
@@ -763,4 +757,4 @@ initialization
 
    RegisterTest('SourceUtilsTests', TSourceUtilsTests);
 
-end.
+end.

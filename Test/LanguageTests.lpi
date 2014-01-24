@@ -44,7 +44,7 @@
     </RequiredPackages>
     <Units Count="33">
       <Unit0>
-        <Filename Value="LanguageTests.lpr"/>
+        <Filename Value="LanguageTests.dpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
@@ -220,7 +220,8 @@
     </Parsing>
     <Linking>
       <Debugging>
-        <DebugInfoType Value="dsDwarf2"/>
+        <StripSymbols Value="True"/>
+        <UseExternalDbgSyms Value="True"/>
       </Debugging>
       <Options>
         <Win32>
@@ -257,4 +258,4 @@
       </Item6>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>
