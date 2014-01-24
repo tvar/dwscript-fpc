@@ -33,7 +33,8 @@ type
    // TExprBaseListExec
    //
    PExprBaseListRec = ^TExprBaseListRec;
-   TExprBaseListRec = record
+   TExprBaseListRec = object {SetListRec USE INLINE HACK!!! 
+             not Allocate Record on stack for const to Emulate it use OBJECT instead record}
       private
          FList : TTightList;
 
@@ -95,7 +96,7 @@ type
          property AsFileName[const x : Integer] : UnicodeString read GetAsFileName;
    end;
 
-   TSortedExprBaseList = class(TSortedList<TExprBase>);
+   TSortedExprBaseList = TSortedList<TExprBase>;
 
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------

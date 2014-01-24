@@ -1,6 +1,7 @@
 unit dwsExternalFunctions;
 
 interface
+{$I dws.inc}
 uses
    SysUtils,
    dwsExprList, dwsExprs, dwsMagicExprs, dwsSymbols, dwsUtils, dwsExternalFunctionJit;
@@ -17,7 +18,7 @@ type
    private
       FBuffer: TBytes;
       FStub: TStub;
-      FCalls: TArray<TFunctionCall>;
+      FCalls: TFunctionCallArray;
 
       procedure SetExternalPointer(value: pointer);
    public
@@ -32,7 +33,7 @@ type
    private
       FBuffer: TBytes;
       FStub: TStub;
-      FCalls: TArray<TFunctionCall>;
+      FCalls: TFunctionCallArray;
 
       procedure SetExternalPointer(value: pointer);
    public
@@ -44,10 +45,13 @@ type
 
 implementation
 uses
-   Windows,
+   {$IFDEF WINDOWS} Windows, {$ELSE} cmem, {$ENDIF}
    dwsTokenizer{$IFDEF CPU386}, dwsExternalFunctionJitx86{$ENDIF};
 
 type
+{$IFDEF FPC}
+   PNativeInt = ^NativeInt;
+{$ENDIF}
    TdwsExternalStubJit = class
    private
       FBuffer: TBytes;
@@ -59,14 +63,19 @@ type
       procedure Eval(funcSymbol: TFuncSymbol; prog: TdwsProgram);
    end;
 
-function MakeExecutable(const value: TBytes; calls: TArray<TFunctionCall>; call: pointer): pointer;
+function MakeExecutable(const value: TBytes; calls: TFunctionCallArray; call: pointer): pointer;
 var
    oldprotect: cardinal;
    lCall, lOffset: nativeInt;
    ptr: pointer;
    fixup: TFunctionCall;
 begin
+   {$IFDEF WINDOWS}
    result := VirtualAlloc(nil, length(value), MEM_RESERVE or MEM_COMMIT, PAGE_READWRITE);
+   {$ELSE}
+   result := Malloc(length(value));
+   {$ENDIF}
+
    system.Move(value[0], result^, length(value));
    for fixup in calls do
    begin
@@ -77,16 +86,21 @@ begin
       lOffset := (lCall - nativeInt(ptr)) - sizeof(pointer);
       PNativeInt(ptr)^ := lOffset;
    end;
-
+   {$IFDEF WINDOWS}
    if not VirtualProtect(result, length(value), PAGE_EXECUTE_READ, oldProtect) then
       RaiseLastOSError;
+   {$ENDIF}
 end;
 
 procedure MakeNotExecutable(value: pointer);
 begin
    if assigned(value) then
+   {$IFDEF WINDOWS}
       if not VirtualFree(value, 0, MEM_RELEASE) then
          RaiseLastOSError;
+   {$ELSE}
+      cmem.Free(value);
+   {$ENDIF}
 end;
 
 { TExternalProcedure }
@@ -188,7 +202,11 @@ var
    i: integer;
 begin
    Clear;
+   {$IFDEF CPU386}
    FInternalJit := JitFactory(funcSymbol.ExternalConvention, prog);
+   {$ELSE}
+   Assert(False);
+   {$ENDIF}
    if funcSymbol.IsType then
       FInternalJit.BeginFunction(funcSymbol.typ, funcSymbol.ParamSize - 1)
    else FInternalJit.BeginProcedure(funcSymbol.ParamSize - 1);
@@ -200,4 +218,4 @@ begin
 
 end;
 
-end.
+end.

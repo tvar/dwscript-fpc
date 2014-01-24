@@ -377,6 +377,7 @@ type
    TLoopExitableStack = TSimpleStack<TLoopExitable>;
    TBooleanStack = TSimpleStack<Boolean>;
    TUnicodeStringStack = TSimpleStack<UnicodeString>;
+   TInternalFunctionSimpleNameObjectHash = TSimpleNameObjectHash<TInternalFunction>;
    // TdwsCompiler
    //
    TSimpleObjectObjectHash_TDataSymbol_TVarExpr = TSimpleObjectObjectHash<TDataSymbol,TVarExpr>;
@@ -427,7 +428,7 @@ type
          FPendingSetterValueExpr : TVarExpr;
 
          FDataSymbolExprReuse : TSimpleObjectObjectHash_TDataSymbol_TVarExpr;
-         FExternalRoutines: TSimpleNameObjectHash<TInternalFunction>;
+         FExternalRoutines: TInternalFunctionSimpleNameObjectHash;
 
          FStaticExtensionSymbols : Boolean;
          FOnCreateBaseVariantSymbol : TCompilerCreateBaseVariantSymbolEvent;
@@ -1193,7 +1194,7 @@ begin
    FFinallyExprs:=TBooleanStack.Create;
    FUnitsFromStack:=TUnicodeStringStack.Create;
    FUnitContextStack:=TdwsCompilerUnitContextStack.Create;
-   FExternalRoutines:=TSimpleNameObjectHash<TInternalFunction>.Create;
+   FExternalRoutines:=TInternalFunctionSimpleNameObjectHash.Create;
    FAnyFuncSymbol:=TAnyFuncSymbol.Create('', fkFunction, 0);
 
    FPendingAttributes:=TdwsSymbolAttributes.Create;
@@ -13725,4 +13726,4 @@ end;
 end.
 // D2009: if you after a build get:
 // [DCC Fatal Error] dwsCompiler.pas: F2051 Unit dwsCompiler was compiled with a different version of dwsUtils.TSimpleObjectObjectHash`2.GetItemHashCode
-// Just do a re-compile, and it should go away... - HV
+// Just do a re-compile, and it should go away... - HV

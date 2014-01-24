@@ -2,7 +2,6 @@ unit dwsExternalFunctionJitx86;
 
 interface
 uses
-   Generics.Collections,
    dwsTokenizer, dwsExternalFunctionJit, dwsExprs;
 
 function JitFactory(conv: TTokenType; prog: TdwsProgram): IExternalFunctionJit;
@@ -22,7 +21,7 @@ type
       FParams: integer;
       FRegParams: integer;
       FRegParamDepth: array[0..2] of byte;
-      FCalls: TList<TFunctionCall>;
+      FCalls: TFunctionCallList;
 
       function GetDepth(depth: byte): byte;
 
@@ -38,7 +37,7 @@ type
       procedure Call;
       procedure PostCall;
       function GetBytes: TBytes;
-      function GetCalls: TArray<TFunctionCall>;
+      function GetCalls: TFunctionCallArray;
       function CallGetParam(pType: TTypeSymbol; index: integer): byte;
    public
       constructor Create(prog: TdwsProgram);
@@ -60,7 +59,7 @@ begin
    FProgram := prog;
    FInitStream := TWriteOnlyBlockStream.Create;
    FStream := TWriteOnlyBlockStream.AllocFromPool;
-   FCalls := TList<TFunctionCall>.Create;
+   FCalls := TFunctionCallList.Create;
 end;
 
 destructor Tx86RegisterJit.Destroy;
@@ -228,9 +227,9 @@ begin
    result := FInitStream.ToBytes;
 end;
 
-function Tx86RegisterJit.GetCalls: TArray<TFunctionCall>;
+function Tx86RegisterJit.GetCalls: TFunctionCallArray;
 begin
    result := FCalls.ToArray;
 end;
 
-end.
+end.

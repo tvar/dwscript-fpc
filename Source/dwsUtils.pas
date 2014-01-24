@@ -208,6 +208,7 @@ type
          function GetItems(const idx : Integer) : T; {$IFDEF DELPHI_2010_MINUS}{$ELSE} inline; {$ENDIF}
          procedure SetItems(const idx : Integer; const value : T);
       public
+         function ToArray: ArrayT;
          procedure Add(const item : T);
          procedure Extract(idx : Integer);
          procedure Clear;
@@ -3204,6 +3205,11 @@ end;
 procedure TSimpleList<T>.SetItems(const idx : Integer; const value : T);
 begin
    FItems[idx]:=value;
+end;
+
+function TSimpleList<T>.ToArray: ArrayT;
+begin
+  Result := Copy(FItems, 0, Count);
 end;
 
 // ------------------

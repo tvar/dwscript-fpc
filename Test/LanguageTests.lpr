@@ -51,6 +51,12 @@ uses
 {$ENDIF}
 //  ULinqTests in 'ULinqTests.pas',
   ULinqJsonTests in 'ULinqJsonTests.pas',
+  dwsSymbolsLibModule in '..\Libraries\SymbolsLib\dwsSymbolsLibModule.pas',
+  dwsExternalFunctions in '..\Source\dwsExternalFunctions.pas',
+  dwsExternalFunctionJit in '..\Source\external\dwsExternalFunctionJit.pas',
+  dwsExternalFunctionJitx86 in '..\Source\external\dwsExternalFunctionJitx86.pas',
+  UExternalFunctionTests in 'UExternalFunctionTests.pas',
+
   dwsDatabase in '..\Libraries\DatabaseLib\dwsDatabase.pas',
   dwsDatabaseLibModule in '..\Libraries\DatabaseLib\dwsDatabaseLibModule.pas',
   dwsGUIDDatabase in '..\Libraries\DatabaseLib\dwsGUIDDatabase.pas',
@@ -66,4 +72,4 @@ begin
    Application.CreateForm(TGUITestRunner, TestRunner);
    Application.Run
 end.
-
+

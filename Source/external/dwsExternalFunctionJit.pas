@@ -11,6 +11,10 @@ type
       offset: integer;
    end;
 
+   TFunctionCallList = TSimpleList<TFunctionCall>;
+   TFunctionCallArray = TFunctionCallList.TArrayT;
+
+
    IExternalFunctionJit = interface
       procedure BeginProcedure(paramCount: integer);
       procedure BeginFunction(retval: TTypeSymbol; paramCount: integer);
@@ -18,7 +22,7 @@ type
       procedure Call;
       procedure PostCall;
       function GetBytes: TBytes;
-      function GetCalls: TArray<TFunctionCall>;
+      function GetCalls: TFunctionCallArray;
    end;
 
 implementation
