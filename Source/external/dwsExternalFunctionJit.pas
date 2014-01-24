@@ -12,7 +12,7 @@ type
    end;
 
    TFunctionCallList = TSimpleList<TFunctionCall>;
-   TFunctionCallArray = TFunctionCallList.TArrayT;
+   TFunctionCallArray = array of TFunctionCall;
 
 
    IExternalFunctionJit = interface
@@ -27,4 +27,4 @@ type
 
 implementation
 
-end.
+end.
