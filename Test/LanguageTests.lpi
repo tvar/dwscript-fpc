@@ -218,11 +218,15 @@
         <CPPInline Value="False"/>
       </SyntaxOptions>
     </Parsing>
+    <CodeGeneration>
+      <SmartLinkUnit Value="True"/>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <StripSymbols Value="True"/>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>
+      <LinkSmart Value="True"/>
       <Options>
         <Win32>
           <GraphicApplication Value="True"/>
