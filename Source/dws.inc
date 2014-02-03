@@ -62,7 +62,14 @@
    {$DEFINE PUREPASCAL}
    {$Hints OFF}
    {$Warnings OFF}
-   {$INLINE OFF}
+
+   {$IF FPC_VERSION = 2}
+     {$IF FPC_RELEASE < 7}
+       {$INLINE OFF}
+     {$IFEND}
+   {$ELSE}
+     {$ERROR Your compiler version not supported}
+   {$IFEND}
 {$ENDIF}
 
 {.$DEFINE PUREPASCAL}
@@ -88,4 +95,4 @@
 {$ELSEIF Defined(WIN64)}
    {$DEFINE WINDOWS}
 {$IFEND}
-
+
