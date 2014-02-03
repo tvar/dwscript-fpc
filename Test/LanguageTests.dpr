@@ -80,20 +80,27 @@ uses
     Application.CreateForm(TGUITestRunner, TestRunner);
   end;
 {$ENDIF}
-{$IFNDEF FPC}
-var
-   procAffinity, systAffinity : {$IF RTLVersion >= 23} NativeUInt;{$ELSE}DWORD;{$IFEND}
-{$ENDIF}
+
+  procedure PrepareApp;
+  {$IFNDEF FPC}
+  var
+     procAffinity, systAffinity : {$IF RTLVersion >= 23} NativeUInt;{$ELSE}DWORD;{$IFEND}
+  begin
+     GetProcessAffinityMask(GetCurrentProcess, procAffinity, systAffinity);
+     SetProcessAffinityMask(GetCurrentProcess, systAffinity);
+     ReportMemoryLeaksOnShutdown:=True;
+  end;
+  {$ELSE}
+  begin
+  end;
+  {$ENDIF}
+
 begin
    DirectSet8087CW($133F);
-   {$IFNDEF FPC}
-   GetProcessAffinityMask(GetCurrentProcess, procAffinity, systAffinity);
-   SetProcessAffinityMask(GetCurrentProcess, systAffinity);
-   ReportMemoryLeaksOnShutdown:=True;
-   {$ENDIF}
+   PrepareApp;
    SetDecimalSeparator('.');
    Application.Initialize;
    RunRegisteredTests;
    Application.Run;
 end.
-
+
