@@ -202,6 +202,7 @@ type
    end;
 
    TTokenizerSourceInfo = record
+      FPathName : UnicodeString;
       FText : UnicodeString;
       FDefaultPos : TScriptPos;
       FHotPos : TScriptPos;
@@ -258,7 +259,7 @@ type
          constructor Create(rules : TTokenizerRules; msgs : TdwsCompileMessageList);
          destructor Destroy; override;
 
-         procedure BeginSourceFile(sourceFile : TSourceFile);
+         procedure BeginSourceFile(sourceFile : TSourceFile; const pathName : String = '');
          procedure EndSourceFile;
 
          function GetToken : TToken; inline;
@@ -286,6 +287,7 @@ type
          property DefaultPos : TScriptPos read FSource.FDefaultPos;
          property HotPos : TScriptPos read FSource.FHotPos;
          property CurrentPos : TScriptPos read FSource.FCurPos;
+         property PathName : UnicodeString read FSource.FPathName;
 
          property ConditionalDepth : TTokenizerConditionalInfoStack read FConditionalDepth;
          property Rules : TTokenizerRules read FRules;
@@ -1051,7 +1053,7 @@ end;
 
 // BeginSourceFile
 //
-procedure TTokenizer.BeginSourceFile(sourceFile : TSourceFile);
+procedure TTokenizer.BeginSourceFile(sourceFile : TSourceFile; const pathName : String = '');
 var
    n : Integer;
 begin
@@ -1061,6 +1063,9 @@ begin
       FSourceStack[n]:=FSource;
    end;
 
+   if pathName<>'' then
+      FSource.FPathName := pathName
+   else FSource.FPathName := sourceFile.Name;
    FSource.FText := sourceFile.Code + (cLineTerminator+#0);
    FSource.FDefaultPos := cNullPos;
    FSource.FDefaultPos.SourceFile := sourceFile;

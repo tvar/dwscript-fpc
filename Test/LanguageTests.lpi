@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
     <Version Value="9"/>
@@ -207,7 +207,7 @@
     <PathDelim Value="\"/>
     <SearchPaths>
       <IncludeFiles Value="..\Source;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\Source;..\Source\SourceUtils;..\Tools\BeaEngine;..\Source\jitter;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;..\Libraries\DatabaseLib"/>
+      <OtherUnitFiles Value="..\Source;..\Source\external;..\Source\SourceUtils;..\Tools\BeaEngine;..\Source\jitter;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;..\Libraries\DatabaseLib"/>
       <UnitOutputDirectory Value="..\lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
@@ -262,4 +262,4 @@
       </Item6>
     </Exceptions>
   </Debugging>
-</CONFIG>
+</CONFIG>

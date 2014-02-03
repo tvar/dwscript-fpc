@@ -67,12 +67,12 @@ uses
   dwsUIBDataBase,
   URTTIExposeTests in 'URTTIExposeTests.pas',
   USpecialTestsRTTI in 'USpecialTestsRTTI.pas',
-{$IFEND}  
+{$IFEND}
 {$ENDIF}
   dwsSymbolsLibModule in '..\Libraries\SymbolsLib\dwsSymbolsLibModule.pas',
-  dwsExternalFunctions in '..\Source\dwsExternalFunctions.pas',
-  dwsExternalFunctionJit in '..\Source\external\dwsExternalFunctionJit.pas',
-  dwsExternalFunctionJitx86 in '..\Source\external\dwsExternalFunctionJitx86.pas',
+  dwsExternalFunctions,
+  dwsExternalFunctionJit,
+  dwsExternalFunctionJitx86,
   UExternalFunctionTests in 'UExternalFunctionTests.pas';
 {$IFDEF FPC}
   procedure RunRegisteredTests;
@@ -103,4 +103,3 @@ begin
    RunRegisteredTests;
    Application.Run;
 end.
-
