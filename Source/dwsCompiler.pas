@@ -24,7 +24,7 @@ unit dwsCompiler;
 interface
 
 uses
-  Variants, Classes, SysUtils,
+  Variants, Classes, SysUtils, TypInfo,
   dwsFileSystem, dwsUtils, dwsXPlatform,
   dwsExprs, dwsSymbols, dwsTokenizer, dwsErrors, dwsDataContext, dwsExprList,
   dwsStrings, dwsFunctions, dwsStack,
@@ -251,6 +251,8 @@ type
          destructor Destroy; override;
 
          function GetCallStack : TdwsExprLocationArray; override;
+         function CallStackLastExpr : TExprBase; override;
+         function CallStackLastProg : TObject; override;
          function CallStackDepth : Integer; override;
          procedure DebuggerNotifyException(const exceptObj : IScriptObj); override;
    end;
@@ -351,6 +353,28 @@ type
          function Callback(opSym : TOperatorSymbol) : Boolean;
    end;
 
+   IdwsCompiler = interface;
+
+   TTypeConvertEvent = procedure (const source: IDataContext; var output);
+
+   TTypeLookupData = record
+      event: TTypeConvertEvent;
+      info: PTypeInfo;
+      constructor Create(event: TTypeConvertEvent; info: PTypeInfo);
+   end;
+
+   IdwsExternalFunctionsManager = interface
+      ['{6365B0E4-4BEA-4AD4-8DDE-C37758A63FEF}']
+      procedure BeginCompilation(const compiler : IdwsCompiler);
+      procedure EndCompilation(const compiler : IdwsCompiler);
+
+      function ConvertToMagicSymbol(value: TFuncSymbol) : TFuncSymbol;
+      function CreateExternalFunction(funcSymbol : TFuncSymbol) : IExternalRoutine;
+
+      procedure RegisterExternalFunction(const name: UnicodeString; address: pointer);
+      procedure RegisterTypeMapping(const name: UnicodeString; const typ: TTypeLookupData);
+   end;
+
    IdwsCompiler = interface
       // direct access to the underlying instance, use with caution!!!
       function Compiler : TdwsCompiler;
@@ -365,10 +389,13 @@ type
       function GetMsgs : TdwsCompileMessageList;
       function GetTokenizer : TTokenizer;
 
+      procedure SetExternalFunctionsManager(const value : IdwsExternalFunctionsManager);
+      function  GetExternalFunctionsManager : IdwsExternalFunctionsManager;
+
       property CurrentProg : TdwsProgram read GetCurrentProg;
       property Msgs : TdwsCompileMessageList read GetMsgs;
       property Tokenizer : TTokenizer read GetTokenizer;
-      procedure RegisterExternalFunction(const name: UnicodeString; address: pointer);
+      property ExternalFunctionsManager : IdwsExternalFunctionsManager read GetExternalFunctionsManager write SetExternalFunctionsManager;
 
       function ReadExpr(expecting : TTypeSymbol = nil) : TTypedExpr;
    end;
@@ -423,7 +450,8 @@ type
          FPendingSetterValueExpr : TVarExpr;
 
          FDataSymbolExprReuse : TSimpleObjectObjectHash_TDataSymbol_TVarExpr;
-         FExternalRoutines: TSimpleNameObjectHash<TInternalFunction>;
+
+         FExternalRoutinesManager : IdwsExternalFunctionsManager;
 
          FStaticExtensionSymbols : Boolean;
          FOnCreateBaseVariantSymbol : TCompilerCreateBaseVariantSymbolEvent;
@@ -744,8 +772,6 @@ type
                                          var sym : TDataSymbol) : TProgramExpr;
          function ReadWhile : TProgramExpr;
          function ResolveUnitReferences(scriptType : TScriptSourceType) : TIdwsUnitList;
-         function CreateExternalFunction(funcSymbol: TFuncSymbol) : IExternalRoutine;
-         function ConvertToMagicSymbol(value: TFuncSymbol) : TFuncSymbol;
 
       protected
          procedure EnterLoop(loopExpr : TProgramExpr);
@@ -814,6 +840,8 @@ type
          function GetCurrentProg : TdwsProgram;
          function GetMsgs : TdwsCompileMessageList;
          function GetTokenizer : TTokenizer;
+         function  GetExternalFunctionsManager : IdwsExternalFunctionsManager;
+         procedure SetExternalFunctionsManager(const value : IdwsExternalFunctionsManager);
 
       public
          constructor Create;
@@ -840,9 +868,6 @@ type
          function OpenStreamForFile(const fileName : UnicodeString) : TStream;
          function GetScriptSource(const scriptName : UnicodeString) : UnicodeString;
          function GetIncludeScriptSource(const scriptName : UnicodeString) : UnicodeString;
-         procedure RegisterExternalFunction(const name: UnicodeString; address: pointer);
-
-         class procedure RegisterExternalRoutineFactory(const factory : TExternalRoutineFactory);
 
          property CurrentProg : TdwsProgram read FProg write FProg;
          property Msgs : TdwsCompileMessageList read FMsgs;
@@ -901,9 +926,6 @@ const
       cvPrivate, cvProtected, cvPublic, cvPublished );
    cTokenToFuncKind : array [ttFUNCTION..ttLAMBDA] of TFuncKind = (
       fkFunction, fkProcedure, fkConstructor, fkDestructor, fkMethod, fkLambda );
-
-var
-   vExternalRoutineFactory : TExternalRoutineFactory;
 
 type
    TReachStatus = (rsReachable, rsUnReachable, rsUnReachableWarned);
@@ -1195,7 +1217,6 @@ begin
    FFinallyExprs:=TSimpleStack<Boolean>.Create;
    FUnitsFromStack:=TSimpleStack<UnicodeString>.Create;
    FUnitContextStack:=TdwsCompilerUnitContextStack.Create;
-   FExternalRoutines:=TSimpleNameObjectHash<TInternalFunction>.Create;
    FAnyFuncSymbol:=TAnyFuncSymbol.Create('', fkFunction, 0);
 
    FPendingAttributes:=TdwsSymbolAttributes.Create;
@@ -1215,7 +1236,6 @@ end;
 //
 destructor TdwsCompiler.Destroy;
 begin
-   FExternalRoutines.Free;
    FOperatorResolver.Free;
 
    ReleaseStringListPool;
@@ -1574,7 +1594,6 @@ begin
    // Create the TdwsProgram
    FMainProg:=CreateProgram(aConf.SystemSymbols, aConf.ResultType, stackParams);
    FSystemTable:=FMainProg.SystemTable.SymbolTable;
-   FExternalRoutines.Clear;
 
    FMsgs:=FMainProg.CompileMsgs;
    SetupMsgsOptions(aConf);
@@ -1594,6 +1613,9 @@ begin
 
    FOperators:=aConf.SystemSymbols.Operators;
    FMainProg.Operators:=FOperators;
+
+   if Assigned(FExternalRoutinesManager) then
+      FExternalRoutinesManager.BeginCompilation(Self);
 
    try
       CheckFilterDependencies(aConf.Units);
@@ -1636,6 +1658,9 @@ begin
       on e: Exception do
          FMsgs.AddCompilerError(cNullPos, e.Message);
    end;
+
+   if Assigned(FExternalRoutinesManager) then
+      FExternalRoutinesManager.EndCompilation(Self);
 
    if FMsgs.State=mlsInProgress then
       FMsgs.State:=mlsCompleted;
@@ -1776,6 +1801,7 @@ var
    i : Integer;
    rankedUnits : array of TUnitMainSymbol;
    ums : TUnitMainSymbol;
+   unitInitExpr : TBlockExprBase;
 begin
    // collect and rank all units with an initialization or finalization sections
    // NOTE: UnitMains order may change arbitrarily in the future, hence the need to reorder
@@ -1790,7 +1816,11 @@ begin
    for i:=0 to High(rankedUnits) do begin
       ums:=rankedUnits[i];
       if (ums<>nil) and (ums.InitializationExpr<>nil) then begin
-         FMainProg.InitExpr.AddStatement(ums.InitializationExpr as TBlockExprBase);
+         unitInitExpr:=ums.InitializationExpr as TBlockExprBase;
+         if coOptimize in Options then begin
+            if unitInitExpr.StatementCount=0 then continue;
+         end;
+         FMainProg.InitExpr.AddStatement(unitInitExpr);
          ums.InitializationExpr.IncRefCount;
       end;
    end;
@@ -1798,9 +1828,7 @@ begin
    for i:=High(rankedUnits) downto 0 do begin
       ums:=rankedUnits[i];
       if (ums<>nil) and (ums.FinalizationExpr<>nil) then begin
-         if FMainProg.FinalExpr=nil then
-            FMainProg.FinalExpr:=TBlockFinalExpr.Create(cNullPos);
-         FMainProg.FinalExpr.AddStatement(ums.FinalizationExpr as TBlockExprBase);
+         FMainProg.AddFinalExpr(ums.FinalizationExpr as TBlockExprBase);
          ums.FinalizationExpr.IncRefCount;
       end;
    end;
@@ -1875,6 +1903,20 @@ begin
    Result:=Tokenizer;
 end;
 
+// SetExternalFunctionsManager
+//
+function TdwsCompiler.GetExternalFunctionsManager: IdwsExternalFunctionsManager;
+begin
+   result := FExternalRoutinesManager;
+end;
+
+// SetExternalFunctionsManager
+//
+procedure TdwsCompiler.SetExternalFunctionsManager(const value : IdwsExternalFunctionsManager);
+begin
+   FExternalRoutinesManager:=value;
+end;
+
 // CheckMatchingDeclarationCase
 //
 procedure TdwsCompiler.CheckMatchingDeclarationCase(const nameString : UnicodeString; sym : TSymbol;
@@ -1900,27 +1942,6 @@ begin
    if isWrite then
       RecordSymbolUse(sym, scriptPos, [suReference, suWrite])
    else RecordSymbolUse(sym, scriptPos, [suReference, suRead]);
-end;
-
-procedure TdwsCompiler.RegisterExternalFunction(const name: UnicodeString;
-  address: pointer);
-var
-   func: TInternalFunction;
-   ext: IExternalRoutine;
-begin
-   func := FExternalRoutines.Objects[name];
-   if func = nil then
-      raise Exception.CreateFmt('No external function named "%s" is registered', [name]);
-   assert(supports(func, IExternalRoutine, ext));
-   ext.SetExternalPointer(address);
-end;
-
-// RegisterExternalRoutineFactory
-//
-class procedure TdwsCompiler.RegisterExternalRoutineFactory(const factory : TExternalRoutineFactory);
-begin
-   Assert(not Assigned(vExternalRoutineFactory));
-   vExternalRoutineFactory:=factory;
 end;
 
 // RecordSymbolUseImplicitReference
@@ -2246,18 +2267,36 @@ begin
       if coContextMap in Options then
          FSourceContextMap.CloseAllContexts(FTok.CurrentPos);
 
-      if unitBlock.SubExprCount>0 then begin
+      if unitBlock.StatementCount>0 then begin
          FProg.InitExpr.AddStatement(unitBlock);
          unitBlock:=nil;
       end;
 
+      if coOptimize in Options then begin
+         if (initializationBlock<>nil) and (initializationBlock.StatementCount=0) then
+            FreeAndNil(initializationBlock);
+         if (finalizationBlock<>nil) and (finalizationBlock.StatementCount=0) then
+            FreeAndNil(finalizationBlock);
+      end;
+
       if FCurrentUnitSymbol<>nil then begin
-         if (initializationBlock<>nil) and (initializationBlock.SubExprCount>0) then begin
+         // this is a normal unit
+         if initializationBlock<>nil then begin
             FCurrentUnitSymbol.InitializationExpr:=initializationBlock;
             initializationBlock:=nil;
          end;
-         if (finalizationBlock<>nil) and (finalizationBlock.SubExprCount>0) then begin
+         if finalizationBlock<>nil then begin
             FCurrentUnitSymbol.FinalizationExpr:=finalizationBlock;
+            finalizationBlock:=nil;
+         end;
+      end else begin
+         // special case of main program
+         if initializationBlock<>nil then begin
+            FProg.InitExpr.AddStatement(initializationBlock);
+            initializationBlock:=nil;
+         end;
+         if finalizationBlock<>nil then begin
+            FMainProg.AddFinalExpr(finalizationBlock);
             finalizationBlock:=nil;
          end;
       end;
@@ -2301,6 +2340,7 @@ function TdwsCompiler.ReadRootStatement(var action : TdwsStatementAction; initVa
 var
    hotPos : TScriptPos;
    token : TTokenType;
+   rootBlock : Boolean;
 begin
    action:=saNone;
    Result:=nil;
@@ -2359,7 +2399,10 @@ begin
          end;
       end;
    else
+      rootBlock:=FTok.Test(ttBEGIN);
       Result:=ReadStatement(action, initVarBlockExpr);
+      if rootBlock and FTok.TestDelete(ttDOT) then
+         action:=saEnd;
    end;
 end;
 
@@ -2992,17 +3035,6 @@ begin
    end;
 end;
 
-function TdwsCompiler.ConvertToMagicSymbol(value: TFuncSymbol): TFuncSymbol;
-var
-   i: integer;
-begin
-   result := TMagicFuncSymbol.Create(value.Name, value.Kind, value.Level);
-   result.Typ := value.typ;
-   for i := 0 to value.Params.Count - 1 do
-      result.AddParam(value.Params[i].Clone);
-   value.Free;
-end;
-
 // ReadProcDecl
 //
 function TdwsCompiler.ReadProcDecl(funcToken : TTokenType; const hotPos : TScriptPos;
@@ -3159,9 +3191,10 @@ begin
                   // forward & external declarations
 
                   if FTok.TestDelete(ttEXTERNAL) then begin
-                     result := ConvertToMagicSymbol(result);
-                     Result.IsExternal:=True;
                      ReadExternalName(Result);
+                     if Assigned(FExternalRoutinesManager) then
+                        Result:=FExternalRoutinesManager.ConvertToMagicSymbol(Result);
+                     Result.IsExternal:=True;
                   end;
 
                   if UnitSection=secInterface then begin
@@ -3673,16 +3706,6 @@ begin
       FMsgs.AddCompilerWarningFmt(scriptPos, CPW_DeprecatedWithMessage,
                                   [sym.Name, deprecatedMessage])
    else FMsgs.AddCompilerWarningFmt(scriptPos, CPW_Deprecated, [sym.Name]);
-end;
-
-// CreateExternalFunction
-//
-function TdwsCompiler.CreateExternalFunction(funcSymbol : TFuncSymbol): IExternalRoutine;
-begin
-   Assert(Assigned(vExternalRoutineFactory));
-   Result:=vExternalRoutineFactory(funcSymbol, FMainProg);
-   if not FExternalRoutines.AddObject(funcSymbol.Name, result.GetSelf as TInternalFunction) then
-      FMsgs.AddCompilerErrorFmt(FTok.HotPos, CPE_DuplicateExternal, [funcSymbol.Name]);
 end;
 
 // ReadProcBody
@@ -4694,10 +4717,22 @@ begin
 
       if not FTok.TestDeleteNamePos(name, elemPos) then
          FMsgs.AddCompilerStop(FTok.HotPos, CPE_NameExpected);
-      elem:=enumSym.Elements.FindLocal(name);
+      if FTok.TestDelete(ttBLEFT) then begin
+         if not FTok.TestDelete(ttBRIGHT) then
+            FMsgs.AddCompilerStop(FTok.HotPos, CPE_BrackRightExpected);
+         elem:=nil;
+      end else begin
+         elem:=enumSym.Elements.FindLocal(name);
+      end;
       if elem=nil then begin
-         FMsgs.AddCompilerErrorFmt(elemPos, CPE_UnknownNameDotName, [enumSym.Name, name]);
-         Result:=TConstExpr.CreateIntegerValue(FProg, enumSym, 0);
+         if UnicodeSameText(name, 'low') then
+            Result:=TConstExpr.CreateIntegerValue(FProg, enumSym, enumSym.LowBound)
+         else if UnicodeSameText(name, 'high') then
+            Result:=TConstExpr.CreateIntegerValue(FProg, enumSym, enumSym.HighBound)
+         else begin
+            FMsgs.AddCompilerErrorFmt(elemPos, CPE_UnknownNameDotName, [enumSym.Name, name]);
+            Result:=TConstExpr.CreateIntegerValue(FProg, enumSym, 0);
+         end;
       end else begin
          RecordSymbolUseReference(elem, elemPos, False);
          Result:=ReadConstName(elem as TElementSymbol, False);
@@ -5541,7 +5576,7 @@ begin
             Result:=nil;
             Result:=ReadSetOfMethod(name, namePos, expr as TTypedExpr);
 
-         // "set of" symbol
+         // enumeration element symbol
          end else if expr.Typ.UnAliasedTypeIs(TEnumerationSymbol) then begin
 
             Result:=nil;
@@ -6827,13 +6862,16 @@ function TdwsCompiler.ReadFunc(funcSym : TFuncSymbol; codeExpr : TTypedExpr = ni
 var
    funcExpr : TFuncExprBase;
 begin
-   if funcSym.IsExternal then
-   begin
-      funcSym.Executable := CreateExternalFunction(funcSym);
-      if funcSym is TMagicFuncSymbol then
-      begin
+   if funcSym.IsExternal then begin
+      if funcSym is TMagicFuncSymbol then begin
+         // jitted external call
+         Assert(Assigned(FExternalRoutinesManager));
+         funcSym.Executable := FExternalRoutinesManager.CreateExternalFunction(funcSym);
          TMagicFuncSymbol(funcSym).InternalFunction := funcSym.Executable.GetSelf as TInternalMagicFunction;
          TMagicFuncSymbol(funcSym).InternalFunction.IncRefCount;
+      end else begin
+         // abstract external call
+         funcSym.Executable:=TExternalFuncHandler.Create;
       end;
    end;
 
@@ -13487,15 +13525,25 @@ end;
 { TParamFunc }
 
 procedure TParamFunc.Execute(info : TProgramInfo);
+var
+   idx : Integer;
 begin
-  Info.ResultAsVariant := Info.Execution.Parameters[Info.ValueAsInteger['Index']];
+   idx:=Info.ParamAsInteger[0];
+   if Cardinal(idx)<Cardinal(Length(Info.Execution.Parameters)) then
+      Info.ResultAsVariant:=Info.Execution.Parameters[idx]
+   else Info.ResultAsVariant:=Unassigned;
 end;
 
 { TParamStrFunc }
 
 procedure TParamStrFunc.Execute(info : TProgramInfo);
+var
+   idx : Integer;
 begin
-  Info.ResultAsString := Info.Execution.Parameters[Info.ValueAsInteger['Index']];
+   idx:=Info.ParamAsInteger[0];
+   if Cardinal(idx)<Cardinal(Length(Info.Execution.Parameters)) then
+      Info.ResultAsString:=Info.Execution.Parameters[idx]
+   else Info.ResultAsString:='';
 end;
 
 { TParamCount }
@@ -13598,6 +13646,20 @@ end;
 function TdwsCompilerExecution.GetCallStack : TdwsExprLocationArray;
 begin
    Result:=nil;
+end;
+
+// CallStackLastExpr
+//
+function TdwsCompilerExecution.CallStackLastExpr : TExprBase;
+begin
+   Result:=nil;
+end;
+
+// CallStackLastProg
+//
+function TdwsCompilerExecution.CallStackLastProg : TObject;
+begin
+   Result:=FCompiler.FProg;
 end;
 
 // CallStackDepth
@@ -13731,6 +13793,14 @@ begin
    for Result:=0 to Count-1 do
       if Items[Result]=s then Exit;
    Result:=-1;
+end;
+
+{ TTypeLookupData }
+
+constructor TTypeLookupData.Create(event: TTypeConvertEvent; info: PTypeInfo);
+begin
+   self.event := event;
+   self.info := info;
 end;
 
 end.
