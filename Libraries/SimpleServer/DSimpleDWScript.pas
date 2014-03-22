@@ -31,7 +31,8 @@ uses
 {$endif}
    dwsWebEnvironment, dwsSystemInfoLibModule, dwsCPUUsage, dwsWebLibModule,
    dwsDataBase, dwsDataBaseLibModule, dwsWebServerInfo, dwsWebServerLibModule,
-   dwsBackgroundWorkersLibModule, dwsSynapseLibModule, dwsCryptoLibModule;
+   dwsBackgroundWorkersLibModule, dwsSynapseLibModule, dwsCryptoLibModule,
+   dwsEncodingLibModule;
 
 type
 
@@ -51,6 +52,12 @@ type
       protected
          function SameItem(const item1, item2 : TCompiledProgram) : Boolean; override;
          function GetItemHashCode(const item1 : TCompiledProgram) : Integer; override;
+   end;
+
+   PExecutingScript = ^TExecutingScript;
+   TExecutingScript = record
+      Exec : IdwsProgramExecution;
+      Prev, Next : PExecutingScript;
    end;
 
    TLoadSourceCodeEvent = function (const fileName : String) : String of object;
@@ -90,6 +97,9 @@ type
       FCompilerLock : TFixedCriticalSection;
       FUseJIT : Boolean;
 
+      FExecutingScripts : PExecutingScript;
+      FExecutingScriptsLock : TMultiReadSingleWrite;
+
       FFlushProgList : TProgramList;
 
       FOnLoadSourceCode : TLoadSourceCodeEvent;
@@ -118,6 +128,7 @@ type
       procedure Finalize;
 
       procedure HandleDWS(const fileName : String; request : TWebRequest; response : TWebResponse);
+      procedure StopDWS;
 
       procedure FlushDWSCache(const fileName : String = '');
 
@@ -220,10 +231,14 @@ begin
 
    TdwsCryptoLib.Create(Self).dwsCrypto.Script:=DelphiWebScript;
 
+   TdwsEncodingLib.Create(Self).dwsEncoding.Script:=DelphiWebScript;
+
    FCompiledPrograms:=TCompiledProgramHash.Create;
    FCompiledProgramsLock:=TFixedCriticalSection.Create;
    FCompilerLock:=TFixedCriticalSection.Create;
    FDependenciesHash:=TDependenciesHash.Create;
+
+   FExecutingScriptsLock:=TMultiReadSingleWrite.Create;
 
    FScriptTimeoutMilliseconds:=3000;
 
@@ -256,6 +271,8 @@ begin
    FCompiledPrograms.Free;
    FDependenciesHash.Free;
    FPathVariables.Free;
+
+   FExecutingScriptsLock.Free;
 end;
 
 // HandleDWS
@@ -286,8 +303,8 @@ procedure TSimpleDWScript.HandleDWS(const fileName : String; request : TWebReque
 
 var
    prog : IdwsProgram;
-   exec : IdwsProgramExecution;
    webenv : TWebEnvironment;
+   executing : TExecutingScript;
 begin
    if (CPUUsageLimit>0) and not WaitForCPULimit then begin
       Handle503(response);
@@ -301,25 +318,60 @@ begin
    if prog.Msgs.HasErrors then
       Handle500(response, prog.Msgs)
    else begin
-      exec:=prog.CreateNewExecution;
+      executing.Exec:=prog.CreateNewExecution;
 
       webenv:=TWebEnvironment.Create;
       webenv.WebRequest:=request;
       webenv.WebResponse:=response;
-      exec.Environment:=webenv;
+      executing.Exec.Environment:=webenv;
       try
-         exec.BeginProgram;
-         exec.RunProgram(ScriptTimeoutMilliseconds);
-         exec.EndProgram;
+         executing.Exec.BeginProgram;
+
+         // insert into executing queue
+         executing.Prev:=nil;
+         FExecutingScriptsLock.BeginWrite;
+         executing.Next:=FExecutingScripts;
+         if FExecutingScripts<>nil then
+            FExecutingScripts.Prev:=@executing;
+         FExecutingScripts:=@executing;
+         FExecutingScriptsLock.EndWrite;
+
+         executing.Exec.RunProgram(ScriptTimeoutMilliseconds);
+
+         // extract from executing queue
+         FExecutingScriptsLock.BeginWrite;
+         if executing.Prev<>nil then
+            executing.Prev.Next:=executing.Next
+         else FExecutingScripts:=executing.Next;
+         if executing.Next<>nil then
+            executing.Next.Prev:=executing.Prev;
+         FExecutingScriptsLock.EndWrite;
+
+         executing.Exec.EndProgram;
       finally
-         exec.Environment:=nil;
+         executing.Exec.Environment:=nil;
       end;
 
-      if exec.Msgs.Count>0 then
-         Handle500(response, exec.Msgs)
+      if executing.Exec.Msgs.Count>0 then
+         Handle500(response, executing.Exec.Msgs)
       else if (response<>nil) and (response.ContentData='') then
-         HandleScriptResult(response, exec.Result);
+         HandleScriptResult(response, executing.Exec.Result);
    end;
+end;
+
+// StopDWS
+//
+procedure TSimpleDWScript.StopDWS;
+var
+   p : PExecutingScript;
+begin
+   FExecutingScriptsLock.BeginRead;
+   p:=FExecutingScripts;
+   while p<>nil do begin
+      p^.Exec.Stop;
+      p:=p.Next;
+   end;
+   FExecutingScriptsLock.EndRead;
 end;
 
 // FlushDWSCache
@@ -329,6 +381,11 @@ var
    oldHash : TCompiledProgramHash;
    unitName : String;
 begin
+   // ignore .bak files
+   if StrEndsWith(fileName, '.bak') then exit;
+   // ignore .db folder
+   if Pos('/.db/', fileName)>0 then exit;
+
    FCompiledProgramsLock.Enter;
    try
       if fileName='' then begin
@@ -637,6 +694,8 @@ end;
 procedure TSimpleDWScript.Shutdown;
 begin
    FBackgroundFileSystem:=nil;
+
+   StopDWS;
 
    if ShutdownScriptName<>'' then
       HandleDWS(ShutdownScriptName, nil, nil);

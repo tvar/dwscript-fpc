@@ -29,6 +29,8 @@ type
          class procedure ParseURLEncoded(const data : RawByteString; dest : TStrings); static;
          class function DecodeURLEncoded(const src : RawByteString; start, count : Integer) : String; overload; static;
          class function DecodeURLEncoded(const src : RawByteString; start : Integer) : String; overload; static;
+         class function EncodeURLEncoded(const src : String) : String; static;
+
          class function DecodeHex2(p : PAnsiChar) : Integer; static;
          class function HasFieldName(const list : TStrings; const name : String) : Boolean; static;
 
@@ -36,6 +38,8 @@ type
 
          class function DateTimeToRFC822(const dt : TDateTime) : String; static;
          class function RFC822ToDateTime(const str : String) : TDateTime; static;
+
+         class function HTMLTextEncode(const s : String) : String; static;
    end;
 
 
@@ -46,6 +50,9 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
+
+const
+   cToHex : String = '0123456789ABCDEF';
 
 // ------------------
 // ------------------ WebUtils ------------------
@@ -113,6 +120,42 @@ begin
    Result:=UTF8ToUnicodeString(raw);
 end;
 
+// EncodeURLEncoded
+//
+class function WebUtils.EncodeURLEncoded(const src : String) : String;
+var
+   raw : UTF8String;
+   pSrc : PAnsiChar;
+   pDest : PChar;
+begin
+   if src='' then Exit('');
+
+   raw := UTF8Encode(src);
+   SetLength(Result, Length(src)*3); // worst-case all special chars
+
+   pSrc := Pointer(raw);
+   pDest := Pointer(Result);
+
+   // we are slightly more aggressive on the special characters than strictly required
+   repeat
+      case pSrc^ of
+         #0 : break;
+         #1..'/',  '['..']', ':'..'@' : begin
+            pDest[0] := '%';
+            pDest[1] := cToHex[1+(Ord(pSrc^) shr 4)];
+            pDest[2] := cToHex[1+(Ord(pSrc^) and 15)];
+            Inc(pDest, 3);
+         end;
+      else
+         pDest^ := Char(pSrc^);
+         Inc(pDest);
+      end;
+      Inc(pSrc);
+   until False;
+
+   SetLength(Result, (NativeUInt(PDest)-NativeUInt(Pointer(Result))) div SizeOf(Char));
+end;
+
 // DecodeURLEncoded
 //
 class function WebUtils.DecodeURLEncoded(const src : RawByteString; start : Integer) : String;
@@ -171,8 +214,6 @@ end;
 // EncodeEncodedWord
 //
 class function WebUtils.EncodeEncodedWord(const s : String) : String;
-const
-   cToHex : String = '0123456789ABCDEF';
 var
    p, n : Integer;
    line : array [0..100] of Char;
@@ -368,6 +409,63 @@ begin
    else if TryEncodeTime(h, mi, s, 0, deltaTime) then
       Result:=Result+deltaTime-deltaHours*(1/100/24)+deltaDays
    else Result:=0;
+end;
+
+// HTMLTextEncode
+//
+class function WebUtils.HTMLTextEncode(const s : String) : String;
+var
+   capacity : Integer;
+   pSrc, pDest : PChar;
+
+   procedure Grow;
+   var
+      nr, dnr : Integer;
+      k : NativeUInt;
+   begin
+      k := NativeUInt(pDest)-NativeUInt(Pointer(Result));
+      nr := Length(Result);
+      dnr := (nr div 4) + 8;
+      SetLength(Result, nr + dnr);
+      Inc(capacity, dnr);
+      pDest := Pointer(NativeUInt(Pointer(Result))+k);
+   end;
+
+   procedure Append(const a : String);
+   var
+      n : Integer;
+   begin
+      n := Length(a);
+      if n>capacity then Grow;
+      System.Move(Pointer(a)^, pDest^, n*SizeOf(Char));
+      Inc(pDest, n);
+      Dec(capacity, n);
+   end;
+
+begin
+   if s='' then exit;
+   capacity:=Length(s);
+   SetLength(Result, capacity);
+   pSrc:=Pointer(s);
+   pDest:=Pointer(Result);
+   repeat
+      case pSrc^ of
+         #0 : break;
+         '<' : Append('&lt;');
+         '>' : Append('&gt;');
+         '&' : Append('&amp;');
+         '"' : Append('&quot;');
+      else
+         if capacity=0 then
+            Grow;
+         pDest^ := pSrc^;
+         Inc(pDest);
+         Dec(capacity);
+      end;
+      Inc(pSrc);
+   until False;
+   if capacity>0 then
+      SetLength(Result, Length(Result)-capacity);
 end;
 
 end.
