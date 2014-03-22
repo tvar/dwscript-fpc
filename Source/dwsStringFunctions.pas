@@ -24,7 +24,7 @@ unit dwsStringFunctions;
 interface
 
 uses
-   Classes, SysUtils, Variants, StrUtils, Math, Masks, {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF}
+   Classes, SysUtils, Variants, StrUtils, Math, Masks,
    dwsXPlatform, dwsUtils, dwsStrings,
    dwsFunctions, dwsSymbols, dwsExprs, dwsCoreExprs, dwsExprList,
    dwsConstExprs, dwsMagicExprs, dwsDataContext;
@@ -1146,4 +1146,3 @@ initialization
    RegisterInternalStringFunction(TGetTextFunc, '_', ['str', SYS_STRING], []);
 
 end.
-

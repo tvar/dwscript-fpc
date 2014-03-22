@@ -218,6 +218,6 @@ initialization
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
-   RegisterTest('dwsClassesLibTests', TdwsClassesTests);
+   RegisterTest('LibModules', TdwsClassesTests);
 
-end.
+end.
