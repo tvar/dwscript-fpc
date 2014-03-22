@@ -4,10 +4,44 @@ interface
 {$I dws.inc}
 uses
    SysUtils,
-   dwsXPlatform,
-   dwsExprList, dwsExprs, dwsMagicExprs, dwsSymbols, dwsUtils, dwsExternalFunctionJIT;
+   dwsXPlatform, dwsExprList, dwsUtils,
+   dwsCompiler, dwsExprs, dwsMagicExprs, dwsSymbols, dwsFunctions,
+   dwsExternalFunctionJIT;
 
 type
+   TBoxedTypeConverter = class
+   private
+      FValue: TTypeLookupData;
+   public
+      constructor Create(value: TTypeLookupData);
+      property value: TTypeLookupData read FValue;
+   end;
+
+   TExternalFunctionManager = class(TInterfacedObject, IdwsExternalFunctionsManager)
+      private
+         FCompiler : IdwsCompiler;
+         FRoutines: TSimpleNameObjectHash<TInternalFunction>;
+      class var
+         FTypeMap: TSimpleNameObjectHash<TBoxedTypeConverter>;
+         class constructor Create;
+         class destructor Destroy;
+         class function LookupType(const name: UnicodeString) : TTypeLookupData;
+      protected
+         procedure BeginCompilation(const compiler : IdwsCompiler);
+         procedure EndCompilation(const compiler : IdwsCompiler);
+
+         function ConvertToMagicSymbol(value: TFuncSymbol) : TFuncSymbol;
+         function CreateExternalFunction(funcSymbol : TFuncSymbol) : IExternalRoutine;
+         procedure RegisterTypeMapping(const name: UnicodeString; const typ: TTypeLookupData);
+      public
+         constructor Create;
+         destructor Destroy; override;
+
+         procedure RegisterExternalFunction(const name: UnicodeString; address: pointer);
+
+         property Compiler : IdwsCompiler read FCompiler;
+
+   end;
 
    TExternalProcedure = class(TInternalMagicProcedure, IExternalRoutine)
    private
@@ -50,7 +84,7 @@ implementation
 
 uses
    {$IFDEF WINDOWS} Windows, {$ELSE} cmem, {$ENDIF}
-   dwsCompiler, dwsStrings,
+   dwsStrings,
    dwsTokenizer{$IFDEF CPU386}, dwsExternalFunctionJitx86{$ENDIF};
 
 type
@@ -68,13 +102,6 @@ type
       procedure Eval(funcSymbol: TFuncSymbol; prog: TdwsProgram);
    end;
 
-function ExternalRoutineFactory(funcSymbol : TFuncSymbol; mainProg : TdwsMainProgram) : IExternalRoutine;
-begin
-   if funcSymbol.IsType then
-      result := TExternalFunction.Create(funcSymbol, mainProg)
-   else result := TExternalProcedure.Create(funcSymbol, mainProg);
-end;
-
 procedure RaiseUnHandledExternalCall(exec : TdwsExecution; func : TFuncSymbol);
 begin
    raise EdwsExternalFuncHandler.CreateFmt(RTE_UnHandledExternalCall,
@@ -88,9 +115,14 @@ var
    lCall, lOffset: nativeInt;
    ptr: pointer;
    fixup: TFunctionCall;
+{$IFDEF WINDOWS}
+   info: _MEMORY_BASIC_INFORMATION;
+{$ENDIF}
 begin
    {$IFDEF WINDOWS}
    result := VirtualAlloc(nil, length(value), MEM_RESERVE or MEM_COMMIT, PAGE_READWRITE);
+   if result = nil then
+     OutOfMemoryError;
    {$ELSE}
    result := Malloc(length(value));
    {$ENDIF}
@@ -118,8 +150,11 @@ begin
          asm int 3 end;
       PPointer(ptr)^ := @PByte(result)[tryFrame[3]];
    end;
-   if not VirtualProtect(result, length(value), PAGE_EXECUTE_READ, oldProtect) then
+   if not VirtualProtect(result, length(value), PAGE_EXECUTE, oldProtect) then
       RaiseLastOSError;
+   VirtualQuery(result, info, sizeof(info));
+   if info.Protect <> PAGE_EXECUTE then
+      raise Exception.Create('VirtualProtect failed');
    {$ENDIF}
 end;
 
@@ -141,6 +176,11 @@ var
    jit: TdwsExternalStubJit;
 begin
    FuncSymbol:=aFuncSymbol;
+
+   assert(assigned(aFuncSymbol));
+   assert(aFuncSymbol.Result = nil);
+   assert(aFuncSymbol.Executable = nil);
+   assert(aFuncSymbol.ExternalConvention in [ttREGISTER..ttSTDCALL]);
    jit := TdwsExternalStubJit.Create;
    try
       jit.Eval(aFuncSymbol, prog);
@@ -182,7 +222,7 @@ begin
    FuncSymbol:=aFuncSymbol;
 
    assert(assigned(aFuncSymbol));
-   assert(aFuncSymbol.IsType);
+   assert(assigned(aFuncSymbol.Result));
    assert(aFuncSymbol.Executable = nil);
    assert(aFuncSymbol.ExternalConvention in [ttREGISTER..ttSTDCALL]);
    jit := TdwsExternalStubJit.Create;
@@ -237,28 +277,129 @@ var
 begin
    Clear;
    {$IFDEF CPU386}
-   FInternalJit := JitFactory(funcSymbol.ExternalConvention, prog);
-   {$ELSE}
-   Assert(False);
-   {$ENDIF}
-   if funcSymbol.IsType then
-      FInternalJit.BeginFunction(funcSymbol.typ, funcSymbol.Params)
+   FInternalJit := JitFactory(funcSymbol.ExternalConvention, prog, TExternalFunctionManager.LookupType);
+   if assigned(funcSymbol.Result) then
+      FInternalJit.BeginFunction(funcSymbol.Result.Typ, funcSymbol.Params)
    else FInternalJit.BeginProcedure(funcSymbol.Params);
    for i := 0 to funcSymbol.Params.Count - 1 do
       FInternalJit.PassParam(funcSymbol.Params[i]);
    FInternalJit.Call;
    FInternalJit.PostCall;
    FBuffer := FInternalJit.GetBytes;
+
+   {$ELSE}
+   Assert(False);
+   {$ENDIF}
 end;
 
-// ------------------------------------------------------------------
-// ------------------------------------------------------------------
-// ------------------------------------------------------------------
-initialization
-// ------------------------------------------------------------------
-// ------------------------------------------------------------------
-// ------------------------------------------------------------------
+// ------------------
+// ------------------ TExternalFunctionManager ------------------
+// ------------------
 
-   TdwsCompiler.RegisterExternalRoutineFactory(ExternalRoutineFactory);
+class constructor TExternalFunctionManager.Create;
+begin
+   FTypeMap:=TSimpleNameObjectHash<TBoxedTypeConverter>.Create;
+end;
 
-end.
+class destructor TExternalFunctionManager.Destroy;
+begin
+   FTypeMap.Clean;
+   FTypeMap.Free;
+end;
+
+// Create
+//
+constructor TExternalFunctionManager.Create;
+begin
+   inherited;
+   FRoutines:=TSimpleNameObjectHash<TInternalFunction>.Create;
+end;
+
+// Destroy
+//
+destructor TExternalFunctionManager.Destroy;
+begin
+   inherited;
+   FRoutines.Free;
+end;
+
+// BeginCompilation
+//
+procedure TExternalFunctionManager.BeginCompilation(const compiler : IdwsCompiler);
+begin
+   Assert(FCompiler=nil, 'Only one session supported right now');
+   FCompiler:=compiler;
+   FRoutines.Clear;
+end;
+
+// EndCompilation
+//
+procedure TExternalFunctionManager.EndCompilation(const compiler : IdwsCompiler);
+begin
+   Assert(FCompiler=compiler);
+   FCompiler:=nil;
+end;
+
+class function TExternalFunctionManager.LookupType(const name: UnicodeString): TTypeLookupData;
+var
+   conv: TBoxedTypeConverter;
+begin
+   conv := FTypeMap.Objects[name];
+   if conv = nil then
+      raise Exception.CreateFmt('No type info is registered for %s.', [name]);
+   result := conv.value;
+end;
+
+// ConvertToMagicSymbol
+//
+function TExternalFunctionManager.ConvertToMagicSymbol(value: TFuncSymbol) : TFuncSymbol;
+var
+   i: integer;
+begin
+   // TODO: add check that value really is supported as an external symbol
+   // (parameter types, etc.)
+   result := TMagicFuncSymbol.Create(value.Name, value.Kind, value.Level);
+   result.Typ := value.typ;
+   for i := 0 to value.Params.Count - 1 do
+      result.AddParam(value.Params[i].Clone);
+   value.Free;
+end;
+
+// CreateExternalFunction
+//
+function TExternalFunctionManager.CreateExternalFunction(funcSymbol : TFuncSymbol) : IExternalRoutine;
+begin
+   if assigned(funcSymbol.Result) then
+      result := TExternalFunction.Create(funcSymbol, Compiler.CurrentProg.Root)
+   else result := TExternalProcedure.Create(funcSymbol, Compiler.CurrentProg.Root);
+   if not FRoutines.AddObject(funcSymbol.Name, result.GetSelf as TInternalFunction) then
+      Compiler.Msgs.AddCompilerErrorFmt(Compiler.Tokenizer.HotPos, CPE_DuplicateExternal, [funcSymbol.Name]);
+end;
+
+// RegisterExternalFunction
+//
+procedure TExternalFunctionManager.RegisterExternalFunction(const name: UnicodeString; address: pointer);
+var
+   func: TInternalFunction;
+   ext: IExternalRoutine;
+begin
+   func := FRoutines.Objects[name];
+   if func = nil then
+      raise Exception.CreateFmt('No external function named "%s" is registered', [name]);
+   assert(supports(func, IExternalRoutine, ext));
+   ext.SetExternalPointer(address);
+end;
+
+procedure TExternalFunctionManager.RegisterTypeMapping(const name: UnicodeString; const typ: TTypeLookupData);
+begin
+   FTypeMap.AddObject(name, TBoxedTypeConverter.Create(typ));
+end;
+
+{ TBoxedTypeConverter }
+
+constructor TBoxedTypeConverter.Create(value: TTypeLookupData);
+begin
+   FValue := value;
+end;
+
+end.

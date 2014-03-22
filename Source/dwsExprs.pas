@@ -97,13 +97,13 @@ type
          procedure Clear;
          function Add(const nameReference, code: UnicodeString; sourceType: TScriptSourceType) : TSourceFile;
 
-         function FindScriptSourceItem(const SourceFileName: UnicodeString): TScriptSourceItem; overload;
+         function FindScriptSourceItem(const sourceFileName: UnicodeString): TScriptSourceItem; overload;
 
-         function IndexOf(const SourceFileName: UnicodeString): Integer; overload;
+         function IndexOf(const sourceFileName: UnicodeString): Integer; overload;
 
          property Count : Integer read FSourceList.FCount;
 
-         property Items[Index: Integer] : TScriptSourceItem read GetSourceItem; default;
+         property Items[index: Integer] : TScriptSourceItem read GetSourceItem; default;
          property MainScript: TScriptSourceItem read FMainScript;
    end;
 
@@ -577,7 +577,8 @@ type
 
          function CallStackDepth : Integer; override;
          function GetCallStack : TdwsExprLocationArray; override;
-         function CallStackLastExpr : TExprBase;
+         function CallStackLastExpr : TExprBase; override;
+         function CallStackLastProg : TObject; override;
 
          function  DebuggerFieldAddr : Integer;
          procedure DebuggerNotifyException(const exceptObj : IScriptObj); override;
@@ -782,6 +783,8 @@ type
          procedure OrphanObject(obj : TRefCountedObject);
 
          property FinalExpr : TBlockFinalExpr read FFinalExpr write FFinalExpr;
+
+         procedure AddFinalExpr(expr : TProgramExpr);
 
          property TimeoutMilliseconds : Integer read FTimeoutMilliseconds write FTimeoutMilliseconds;
          property MaxRecursionDepth : Integer read FStackParameters.MaxRecursionDepth write FStackParameters.MaxRecursionDepth;
@@ -1601,6 +1604,7 @@ type
          function GetParamAsInteger(index : Integer) : Int64;
          procedure SetParamAsInteger(index : Integer; const v : Int64);
          function GetParamAsString(index : Integer) : UnicodeString;
+         procedure SetParamAsString(index : Integer; const v : UnicodeString);
          function GetParamAsDataString(index : Integer) : RawByteString;
          procedure SetParamAsDataString(index : Integer; const v : RawByteString);
          function GetParamAsFloat(index : Integer) : Double;
@@ -1649,7 +1653,7 @@ type
          property ParamAsPVariant[index : Integer] : PVariant read GetParamAsPVariant;
          property ParamAsVariant[index : Integer] : Variant read GetParamAsVariant write SetParamAsVariant;
          property ParamAsInteger[index : Integer] : Int64 read GetParamAsInteger write SetParamAsInteger;
-         property ParamAsString[index : Integer] : UnicodeString read GetParamAsString;
+         property ParamAsString[index : Integer] : UnicodeString read GetParamAsString write SetParamAsString;
          property ParamAsDataString[index : Integer] : RawByteString read GetParamAsDataString write SetParamAsDataString;
          property ParamAsFloat[index : Integer] : Double read GetParamAsFloat;
          property ParamAsBoolean[index : Integer] : Boolean read GetParamAsBoolean;
@@ -1940,9 +1944,9 @@ begin
    if BeginProgram then begin
       if ProgramState=psRunning then
          RunProgram(aTimeoutMilliSeconds);
-      if ProgramState in [psRunning, psRunningStopped] then
-         EndProgram;
    end;
+   if ProgramState in [psRunning, psRunningStopped] then
+      EndProgram;
 end;
 
 // ExecuteParam
@@ -2610,6 +2614,18 @@ begin
    else Result:=nil;
 end;
 
+// CallStackLastProg
+//
+function TdwsProgramExecution.CallStackLastProg : TObject;
+var
+   n : Integer;
+begin
+   n:=FCallStack.Count-1;
+   if n>=0 then
+      Result:=TObject(FCallStack.List[n])
+   else Result:=nil;
+end;
+
 // DebuggerFieldAddr
 //
 function TdwsProgramExecution.DebuggerFieldAddr : Integer;
@@ -3094,6 +3110,15 @@ begin
    if FOrphanedObjects=nil then
       FOrphanedObjects:=TRefCountedObjectList.Create;
    FOrphanedObjects.Add(obj);
+end;
+
+// AddFinalExpr
+//
+procedure TdwsMainProgram.AddFinalExpr(expr : TProgramExpr);
+begin
+   if FFinalExpr=nil then
+      FFinalExpr:=TBlockFinalExpr.Create(cNullPos);
+   FFinalExpr.AddStatement(expr);
 end;
 
 // GetConditionalDefines
@@ -5697,7 +5722,11 @@ procedure TProgramInfo.GetSymbolInfo(sym : TSymbol; var info : IInfo);
       locData : IDataContext;
    begin
       // Field of the Self object
-      Execution.DataContext_Create(FScriptObj.AsData, sym.Offset, locData);
+      if sym.StructSymbol is TRecordSymbol then begin
+         Execution.DataContext_Create(Self.GetData(SYS_SELF), sym.Offset, locData);
+      end else begin
+         Execution.DataContext_Create(FScriptObj.AsData, sym.Offset, locData);
+      end;
       TInfo.SetChild(Result, Self, sym.Typ, locData);
    end;
 
@@ -6067,6 +6096,13 @@ begin
    if p^.VType=varUString then
       Result:=UnicodeString(p.VString)
    else VariantToString(PVariant(p)^, Result);
+end;
+
+// SetParamAsString
+//
+procedure TProgramInfo.SetParamAsString(index : Integer; const v : UnicodeString);
+begin
+   GetParamAsPVariant(index)^:=v;
 end;
 
 // GetParamAsDataString

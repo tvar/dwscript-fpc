@@ -160,6 +160,7 @@ type
          function  EvalAsFloat(exec : TdwsExecution) : Double; virtual; abstract;
          procedure EvalAsString(exec : TdwsExecution; var Result : UnicodeString); overload; virtual; abstract;
          procedure EvalAsVariant(exec : TdwsExecution; var Result : Variant); overload; virtual; abstract;
+         procedure EvalAsDataContext(exec : TdwsExecution; var Result : IDataContext); virtual;
          procedure EvalAsScriptObj(exec : TdwsExecution; var Result : IScriptObj); virtual; abstract;
          procedure EvalNoResult(exec : TdwsExecution); virtual;
 
@@ -1736,6 +1737,8 @@ type
          procedure ClearScriptError;
 
          function GetCallStack : TdwsExprLocationArray; virtual; abstract;
+         function CallStackLastExpr : TExprBase; virtual; abstract;
+         function CallStackLastProg : TObject; virtual; abstract;
          function CallStackDepth : Integer; virtual; abstract;
 
          procedure DataContext_Create(const data : TData; addr : Integer; var Result : IDataContext); inline;
@@ -1957,6 +1960,14 @@ end;
 
 // EvalNoResult
 //
+procedure TExprBase.EvalAsDataContext(exec: TdwsExecution; var Result: IDataContext);
+var
+   temp : IScriptObj;
+begin
+   EvalAsScriptObj(exec, temp);
+   Result := temp;
+end;
+
 procedure TExprBase.EvalNoResult(exec : TdwsExecution);
 begin
    Eval(exec);

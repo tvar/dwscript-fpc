@@ -569,6 +569,8 @@ implementation
 // ------------------------------------------------------------------
 // ------------------------------------------------------------------
 
+{$R-}
+
 const
    cExecInstanceGPR = gprEDI;
    cExecInstanceEBPoffset = 4;
@@ -4700,4 +4702,4 @@ begin
    Result:=0;
 end;
 
-end.
+end.

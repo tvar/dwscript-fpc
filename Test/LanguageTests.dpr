@@ -62,6 +62,7 @@ uses
   ULinqTests in 'ULinqTests.pas',
   UCOMConnectorTests in 'UCOMConnectorTests.pas',
   UdwsDataBaseTests in 'UdwsDataBaseTests.pas',
+  UdwsCryptoTests in 'UdwsCryptoTests.pas',
 {$IF RTLVersion >= 21}
   dwsSynSQLiteDatabase in '..\Libraries\DatabaseLib\dwsSynSQLiteDatabase.pas',
   dwsUIBDataBase,
@@ -74,7 +75,7 @@ uses
   dwsExternalFunctionJit,
   dwsExternalFunctionJitx86,
   UExternalFunctionTests in 'UExternalFunctionTests.pas';
-{$IFDEF FPC}
+{$IFDEF FPC} 
   procedure RunRegisteredTests;
   begin
     Application.CreateForm(TGUITestRunner, TestRunner);
@@ -102,4 +103,4 @@ begin
    Application.Initialize;
    RunRegisteredTests;
    Application.Run;
-end.
+end.

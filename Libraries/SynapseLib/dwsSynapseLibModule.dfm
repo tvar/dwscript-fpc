@@ -47,6 +47,6 @@ object dwsSynapseLib: TdwsSynapseLib
     UnitName = 'Networking.Synapse'
     StaticSymbols = True
     Left = 72
-    Top = 16
+    Top = 24
   end
 end

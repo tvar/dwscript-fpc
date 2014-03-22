@@ -207,7 +207,7 @@
     <PathDelim Value="\"/>
     <SearchPaths>
       <IncludeFiles Value="..\Source;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\Source;..\Source\external;..\Source\SourceUtils;..\Tools\BeaEngine;..\Source\jitter;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;..\Libraries\DatabaseLib"/>
+      <OtherUnitFiles Value="..\Source;..\Libraries\CryptoLib;..\Source\external;..\Source\SourceUtils;..\Tools\BeaEngine;..\Source\jitter;..\Libraries\LinqLib;..\Libraries\DocBuilder;..\Libraries\ClassesLib;..\Libraries\SymbolsLib;..\Libraries\DatabaseLib"/>
       <UnitOutputDirectory Value="..\lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>

@@ -1106,19 +1106,23 @@ type
      function EvalAsBoolean(exec : TdwsExecution) : Boolean; override;
    end;
 
-   // a shl b
-   TShlExpr = class(TIntegerBinOpExpr)
-     function EvalAsInteger(exec : TdwsExecution) : Int64; override;
-   end;
-
-   // a shr b
-   TShrExpr = class(TIntegerBinOpExpr)
-      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   // a shift b
+   TShiftExpr = class(TIntegerBinOpExpr)
       function Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr; override;
    end;
 
+   // a shl b
+   TShlExpr = class(TShiftExpr)
+      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   end;
+
+   // a shr b
+   TShrExpr = class(TShiftExpr)
+      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
+   end;
+
    // a sar b
-   TSarExpr = class(TIntegerBinOpExpr)
+   TSarExpr = class(TShiftExpr)
      function EvalAsInteger(exec : TdwsExecution) : Int64; override;
    end;
 
@@ -4861,6 +4865,21 @@ begin
 end;
 
 // ------------------
+// ------------------ TShiftExpr ------------------
+// ------------------
+
+// Optimize
+//
+function TShiftExpr.Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr;
+begin
+   if Right.IsConstant and (Right.EvalAsInteger(exec)=0) then begin
+      Result:=Left;
+      FLeft:=nil;
+      Free;
+   end else Result:=Self;
+end;
+
+// ------------------
 // ------------------ TShlExpr ------------------
 // ------------------
 
@@ -4880,17 +4899,6 @@ end;
 function TShrExpr.EvalAsInteger(exec : TdwsExecution) : Int64;
 begin
    Result := FLeft.EvalAsInteger(exec) shr FRight.EvalAsInteger(exec);
-end;
-
-// Optimize
-//
-function TShrExpr.Optimize(prog : TdwsProgram; exec : TdwsExecution) : TProgramExpr;
-begin
-   if Right.IsConstant and (Right.EvalAsInteger(exec)=0) then begin
-      Result:=Right;
-      FRight:=nil;
-      Free;
-   end else Result:=Self;
 end;
 
 // ------------------
@@ -8670,4 +8678,4 @@ begin
    Result:=3;
 end;
 
-end.
+end.
