@@ -87,4 +87,4 @@ begin
    Info.ResultAsDataString := UnicodeStringToUtf8(Info.ParamAsString[0]);
 end;
 
-end.
+end.

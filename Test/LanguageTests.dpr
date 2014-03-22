@@ -63,15 +63,16 @@ uses
   UCOMConnectorTests in 'UCOMConnectorTests.pas',
   UdwsDataBaseTests in 'UdwsDataBaseTests.pas',
   UdwsCryptoTests in 'UdwsCryptoTests.pas',
+  UdwsEncodingTests in 'UdwsEncodingTests.pas',
 {$ENDIF}
   dwsSymbolsLibModule in '..\Libraries\SymbolsLib\dwsSymbolsLibModule.pas',
   dwsExternalFunctions,
   dwsExternalFunctionJit,
   dwsExternalFunctionJitx86,
-  UExternalFunctionTests in 'UExternalFunctionTests.pas',
-  UdwsEncodingTests in 'UdwsEncodingTests.pas';  
+  UExternalFunctionTests in 'UExternalFunctionTests.pas';
   
-{$IFDEF FPC} 
+{$IFDEF FPC}
+  procedure RunRegisteredTests;
   begin
     Application.CreateForm(TGUITestRunner, TestRunner);
   end;
@@ -98,4 +99,4 @@ begin
    Application.Initialize;
    RunRegisteredTests;
    Application.Run;
-end.
+end.
