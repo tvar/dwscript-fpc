@@ -858,7 +858,7 @@ begin
          end;
          varUString : begin
             argValue:=TdwsJSONImmediate.Create;
-            argValue.AsString:=UnicodeString(pVal^.VUString);
+            argValue.AsString:=UnicodeString(pVal^.vstring);
          end;
          varBoolean : begin
             argValue:=TdwsJSONImmediate.Create;
