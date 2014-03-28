@@ -18,11 +18,15 @@ type
    end;
 
    TExternalFunctionManager = class(TInterfacedObject, IdwsExternalFunctionsManager)
-      private
+      private type
+        TSimpleNameObjectHashBoxedTypeConverter = TSimpleNameObjectHash<TBoxedTypeConverter>;
+        TSimpleNameObjectHashInternalFunction = TSimpleNameObjectHash<TInternalFunction>;
+      var
+
          FCompiler : IdwsCompiler;
-         FRoutines: TSimpleNameObjectHash<TInternalFunction>;
+         FRoutines: TSimpleNameObjectHashInternalFunction;
       class var
-         FTypeMap: TSimpleNameObjectHash<TBoxedTypeConverter>;
+         FTypeMap: TSimpleNameObjectHashBoxedTypeConverter;
          class constructor Create;
          class destructor Destroy;
          class function LookupType(const name: UnicodeString) : TTypeLookupData;
@@ -274,10 +278,12 @@ end;
 procedure TdwsExternalStubJit.Eval(funcSymbol: TFuncSymbol; prog: TdwsProgram);
 var
    i: integer;
+   vOnLookupType: TTypeLookupEvent;
 begin
    Clear;
    {$IFDEF CPU386}
-   FInternalJit := JitFactory(funcSymbol.ExternalConvention, prog, TExternalFunctionManager.LookupType);
+   vOnLookupType := @TExternalFunctionManager.LookupType;
+   FInternalJit := JitFactory(funcSymbol.ExternalConvention, prog, vOnLookupType);
    if assigned(funcSymbol.Result) then
       FInternalJit.BeginFunction(funcSymbol.Result.Typ, funcSymbol.Params)
    else FInternalJit.BeginProcedure(funcSymbol.Params);
@@ -298,7 +304,7 @@ end;
 
 class constructor TExternalFunctionManager.Create;
 begin
-   FTypeMap:=TSimpleNameObjectHash<TBoxedTypeConverter>.Create;
+   FTypeMap:=TSimpleNameObjectHashBoxedTypeConverter.Create;
 end;
 
 class destructor TExternalFunctionManager.Destroy;
@@ -312,7 +318,7 @@ end;
 constructor TExternalFunctionManager.Create;
 begin
    inherited;
-   FRoutines:=TSimpleNameObjectHash<TInternalFunction>.Create;
+   FRoutines:=TSimpleNameObjectHashInternalFunction.Create;
 end;
 
 // Destroy
@@ -402,4 +408,4 @@ begin
    FValue := value;
 end;
 
-end.
+end.

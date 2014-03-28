@@ -360,7 +360,7 @@ type
    TTypeLookupData = record
       event: TTypeConvertEvent;
       info: PTypeInfo;
-      constructor Create(event: TTypeConvertEvent; info: PTypeInfo);
+      {$ifdef FPC}class function {$ELSE} constructor {$ENDIF} Create(event: TTypeConvertEvent; info: PTypeInfo){$IFDEF FPC}: TTypeLookupData; static{$ENDIF};
    end;
 
    IdwsExternalFunctionsManager = interface
@@ -13819,10 +13819,10 @@ end;
 
 { TTypeLookupData }
 
-constructor TTypeLookupData.Create(event: TTypeConvertEvent; info: PTypeInfo);
+{$IFDEF FPC}class function{$ELSE}constructor{$ENDIF} TTypeLookupData.Create(event: TTypeConvertEvent; info: PTypeInfo){$IFDEF FPC}: TTypeLookupData; static{$ENDIF};
 begin
-   self.event := event;
-   self.info := info;
+   {$IFDEF FPC}Result{$ELSE}self{$ENDIF}.event := event;
+   {$IFDEF FPC}Result{$ELSE}self{$ENDIF}.info := info;
 end;
 
 end.
