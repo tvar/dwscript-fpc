@@ -29,38 +29,58 @@ uses
    dwsExprs, dwsExprList, dwsSymbols, dwsUnitSymbols, dwsCoreExprs;
 
 type
+   TConnectorCallFlag = (ccfIsInstruction, ccfIsIndex, ccfHasVarParams,
+                         ccfComplexArgs);
+   TConnectorCallFlags = set of TConnectorCallFlag;
 
-   TConnectorCallExpr = class(TPosDataExpr)
+   TBaseConnectorCallExpr = class(TPosDataExpr)
       private
-         FArgs: TTightList;
-         FBaseExpr: TTypedExpr;
-         FConnectorArgs: TConnectorArgs;
-         FConnectorCall: IConnectorCall;
-         FConnectorParams: TConnectorParamArray;
-         FIsInstruction: Boolean;
-         FIsWritable: Boolean;
-         FIsIndex: Boolean;
-         FName: UnicodeString;
+         FArgs : TTightList;
+         FBaseExpr : TTypedExpr;
+         FName : UnicodeString;
 
       protected
          function GetSubExpr(i : Integer) : TExprBase; override;
          function GetSubExprCount : Integer; override;
 
       public
-         constructor Create(Prog: TdwsProgram; const aScriptPos: TScriptPos; const Name: UnicodeString;
-                            BaseExpr: TTypedExpr; IsWrite: Boolean = True; IsIndex: Boolean = False);
+         constructor Create(aProg: TdwsProgram; const aScriptPos: TScriptPos;
+                            const aName: UnicodeString; aBaseExpr: TTypedExpr);
          destructor Destroy; override;
 
-         function AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType) : Boolean;
          procedure AddArg(expr : TTypedExpr);
+
+         property BaseExpr : TTypedExpr read FBaseExpr write FBaseExpr;
+   end;
+
+   // TODO : split between Complex & Fast classes
+   // (has structual implication because of the late binding)
+   TConnectorCallExpr = class(TBaseConnectorCallExpr)
+      private
+         FConnectorCall : IConnectorCall;
+         FConnectorFastCall : IConnectorFastCall;
+         FConnectorParams : TConnectorParamArray;
+         FIsWritable : Boolean;
+         FFlags : TConnectorCallFlags;
+
+      protected
+         function GetIsIndex : Boolean; inline;
+
+         procedure ComplexEvalAsVariant(exec : TdwsExecution; var result : Variant);
+         procedure FastEvalAsVariant(exec : TdwsExecution; var result : Variant);
+
+      public
+         constructor Create(aProg: TdwsProgram; const aScriptPos: TScriptPos; const aName: UnicodeString;
+                            aBaseExpr: TTypedExpr; isWrite: Boolean = True; isIndex: Boolean = False);
+
+         function AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType) : Boolean;
          function Eval(exec : TdwsExecution) : Variant; override;
          function IsWritable : Boolean; override;
 
          procedure GetDataPtr(exec : TdwsExecution; var result : IDataContext); override;
 
-         property BaseExpr : TTypedExpr read FBaseExpr write FBaseExpr;
          property IsWrite : Boolean read FIsWritable write FIsWritable;
-         property IsIndex : Boolean read FIsIndex write FIsIndex;
+         property IsIndex : Boolean read GetIsIndex;
          property ConnectorCall : IConnectorCall read FConnectorCall write FConnectorCall;
    end;
 
@@ -149,32 +169,66 @@ implementation
 // ------------------------------------------------------------------
 
 // ------------------
-// ------------------ TConnectorExpr ------------------
+// ------------------ TBaseConnectorCallExpr ------------------
 // ------------------
 
-constructor TConnectorCallExpr.Create(Prog: TdwsProgram; const aScriptPos: TScriptPos;
-  const Name: UnicodeString; BaseExpr: TTypedExpr; IsWrite: Boolean; IsIndex: Boolean);
+// Create
+//
+constructor TBaseConnectorCallExpr.Create(aProg: TdwsProgram; const aScriptPos: TScriptPos;
+                                          const aName: UnicodeString; aBaseExpr: TTypedExpr);
 begin
-  inherited Create(Prog, aScriptPos, nil);
-  FName := Name;
-  FBaseExpr := BaseExpr;
-  FIsInstruction := IsWrite;
-  FIsWritable := IsWrite;
-  FIsIndex := IsIndex;
+   inherited Create(aProg, aScriptPos, nil);
+   FName:=aName;
+   FBaseExpr:=aBaseExpr;
 end;
 
-destructor TConnectorCallExpr.Destroy;
+// Destroy
+//
+destructor TBaseConnectorCallExpr.Destroy;
 begin
-  FBaseExpr.Free;
-  FArgs.Clean;
-  inherited;
+   FBaseExpr.Free;
+   FArgs.Clean;
+   inherited;
+end;
+
+// GetSubExpr
+//
+function TBaseConnectorCallExpr.GetSubExpr(i : Integer) : TExprBase;
+begin
+   if i=0 then
+      Result:=BaseExpr
+   else Result:=TExprBase(FArgs.List[i-1]);
+end;
+
+// GetSubExprCount
+//
+function TBaseConnectorCallExpr.GetSubExprCount : Integer;
+begin
+   Result:=FArgs.Count+1;
 end;
 
 // AddArg
 //
-procedure TConnectorCallExpr.AddArg(expr : TTypedExpr);
+procedure TBaseConnectorCallExpr.AddArg(expr : TTypedExpr);
 begin
    FArgs.Add(expr);
+end;
+
+// ------------------
+// ------------------ TConnectorExpr ------------------
+// ------------------
+
+// Create
+//
+constructor TConnectorCallExpr.Create(aProg: TdwsProgram; const aScriptPos: TScriptPos;
+  const aName: UnicodeString; aBaseExpr: TTypedExpr; isWrite: Boolean; isIndex: Boolean);
+begin
+   inherited Create(aProg, aScriptPos, aName, aBaseExpr);
+   if isWrite then
+      Include(FFlags, ccfIsInstruction);
+   FIsWritable := isWrite;
+   if isIndex then
+      Include(FFlags, ccfIsIndex);
 end;
 
 // AssignConnectorSym
@@ -182,20 +236,30 @@ end;
 function TConnectorCallExpr.AssignConnectorSym(prog : TdwsProgram; const connectorType : IConnectorType): Boolean;
 var
    i : Integer;
-   typSym, paramTyp : TTypeSymbol;
+   typSym : TTypeSymbol;
    arg : TTypedExpr;
+   autoVarParams, hasVarParams : Boolean;
 begin
-  // Prepare the parameter information array to query the connector symbol
+   // Prepare the parameter information array to query the connector symbol
    if FArgs.Count>64 then
       prog.CompileMsgs.AddCompilerErrorFmt(ScriptPos, CPE_ConnectorTooManyArguments, [FArgs.Count]);
 
+   autoVarParams:=connectorType.AutoVarParams;
+   hasVarParams:=False;
    SetLength(FConnectorParams, FArgs.Count);
    for i:=0 to FArgs.Count-1 do begin
       arg:=TTypedExpr(FArgs.List[i]);
-      FConnectorParams[i].IsVarParam:=(arg is TDataExpr) and TDataExpr(arg).IsWritable
-                                      and not (arg.Typ is TArraySymbol);
+      FConnectorParams[i].IsVarParam:=     autoVarParams
+                                       and (arg is TDataExpr)
+                                       and TDataExpr(arg).IsWritable
+                                       and not (arg.Typ is TArraySymbol);
       FConnectorParams[i].TypSym:=arg.Typ;
+      hasVarParams:=hasVarParams or FConnectorParams[i].IsVarParam;
+      if (arg.Typ=nil) or (arg.Typ.Size>1) or (arg.Typ.ClassType=TDynamicArraySymbol) then
+         Include(FFlags, ccfComplexArgs);
    end;
+   if hasVarParams then
+      Include(FFlags, ccfHasVarParams);
 
    if not connectorType.AcceptsParams(FConnectorParams) then begin
       if FName<>'' then begin
@@ -209,7 +273,7 @@ begin
 
    // Ask the connector symbol if such a method exists
    try
-      if FIsIndex then
+      if ccfIsIndex in FFlags then
          FConnectorCall := ConnectorType.HasIndex(FName, FConnectorParams, typSym, FIsWritable)
       else begin
          FIsWritable := False;
@@ -224,14 +288,8 @@ begin
 
    Result := Assigned(FConnectorCall);
    if Result then begin
-      // Prepare the arguments for the method call
-      SetLength(FConnectorArgs, FArgs.Count);
-      for i:=0 to FArgs.Count-1 do begin
-         paramTyp:=FConnectorParams[i].TypSym;
-         if paramTyp<>nil then
-            SetLength(FConnectorArgs[i], paramTyp.Size);
-      end;
       FTyp:=typSym;
+      FConnectorCall.QueryInterface(IConnectorFastCall, FConnectorFastCall);
    end else begin
       prog.CompileMsgs.AddCompilerErrorFmt(ScriptPos, CPE_ConnectorCall,
                                            [FName, connectorType.ConnectorCaption])
@@ -240,15 +298,60 @@ end;
 
 // Eval
 //
-function TConnectorCallExpr.Eval(exec : TdwsExecution): Variant;
+function TConnectorCallExpr.Eval(exec : TdwsExecution) : Variant;
+begin
+   if FConnectorFastCall<>nil then
+      FastEvalAsVariant(exec, Result)
+   else ComplexEvalAsVariant(exec, Result);
+end;
+
+// ComplexEvalAsVariant
+//
+procedure TConnectorCallExpr.ComplexEvalAsVariant(exec : TdwsExecution; var result : Variant);
 var
-   sourcePtr : IDataContext;
-   x : Integer;
+   callArgs : TConnectorArgs;
+
+   procedure EvalComplexArgs;
+   var
+      i : Integer;
+      arg : TTypedExpr;
+      argTyp : TTypeSymbol;
+      obj : IScriptObj;
+      sourcePtr : IDataContext;
+   begin
+      for i:=0 to FArgs.Count-1 do begin
+         arg:=TTypedExpr(FArgs.List[i]);
+         argTyp:=FConnectorParams[i].TypSym;
+         SetLength(callArgs[i], argTyp.Size);
+         if argTyp.Size=1 then begin
+            if argTyp.ClassType=TDynamicArraySymbol then begin
+               arg.EvalAsScriptObj(exec, obj);
+               callArgs[i][0]:=VarArrayOf(TScriptDynamicArray(obj.GetSelf).AsData);
+            end else arg.EvalAsVariant(exec, callArgs[i][0]);
+         end else begin
+            sourcePtr:=TDataExpr(arg).DataPtr[exec];
+            sourcePtr.CopyData(callArgs[i], 0, argTyp.Size);
+         end;
+      end;
+   end;
+
+   procedure AssignVarParams;
+   var
+      i : Integer;
+      locData : IDataContext;
+   begin
+      for i:=0 to FArgs.Count-1 do begin
+         if FConnectorParams[i].IsVarParam then begin
+            exec.DataContext_Create(callArgs[i], 0, locData);
+            TDataExpr(FArgs.List[i]).AssignData(exec, locData);
+         end;
+      end;
+   end;
+
+var
+   i : Integer;
    arg : TTypedExpr;
-   argTyp : TTypeSymbol;
    buf : Variant;
-   obj : IScriptObj;
-   locData : IDataContext;
    resultData : TData;
 begin
    if exec.IsDebugging then
@@ -256,27 +359,24 @@ begin
 
    // Call function
    try
-      for x:=0 to High(FConnectorArgs) do begin
-         arg:=TTypedExpr(FArgs.List[x]);
-         argTyp:=FConnectorParams[x].TypSym;
-         if argTyp.Size = 1 then begin
-            if argTyp is TDynamicArraySymbol then begin
-               arg.EvalAsScriptObj(exec, obj);
-               FConnectorArgs[x][0]:=VarArrayOf(TScriptDynamicArray(obj.GetSelf).AsData);
-            end else arg.EvalAsVariant(exec, FConnectorArgs[x][0]);
-         end else begin
-            sourcePtr := TDataExpr(arg).DataPtr[exec];
-            sourcePtr.CopyData(FConnectorArgs[x], 0, argTyp.Size);
+      SetLength(callArgs, FArgs.Count);
+      if ccfComplexArgs in FFlags then
+         EvalComplexArgs
+      else begin
+         for i:=0 to FArgs.Count-1 do begin
+            arg:=TTypedExpr(FArgs.List[i]);
+            SetLength(callArgs[i], 1);
+            arg.EvalAsVariant(exec, callArgs[i][0]);
          end;
       end;
 
       try
          // The call itself
          if FConnectorCall.NeedDirectReference then
-            resultData := FConnectorCall.Call(TDataExpr(FBaseExpr).DataPtr[exec].AsPVariant(0)^, FConnectorArgs)
+            resultData := FConnectorCall.Call(TDataExpr(FBaseExpr).DataPtr[exec].AsPVariant(0)^, callArgs)
          else begin
             FBaseExpr.EvalAsVariant(exec, buf);
-            resultData := FConnectorCall.Call(buf, FConnectorArgs);
+            resultData := FConnectorCall.Call(buf, callArgs);
          end;
       except
          on e: EScriptError do begin
@@ -288,13 +388,8 @@ begin
          raise;
       end;
 
-      for x:=0 to High(FConnectorArgs) do begin
-         if FConnectorParams[x].IsVarParam then begin
-            exec.DataContext_Create(FConnectorArgs[x], 0, locData);
-            TDataExpr(FArgs.List[x]).AssignData(exec, locData);
-         end;
-      end;
-
+      if ccfHasVarParams in FFlags then
+         AssignVarParams;
    finally
       if exec.IsDebugging then
          exec.Debugger.LeaveFunc(exec, Self);
@@ -305,20 +400,34 @@ begin
    else VarClear(Result);
 end;
 
+// FastEvalAsVariant
+//
+procedure TConnectorCallExpr.FastEvalAsVariant(exec : TdwsExecution; var result : Variant);
+var
+   i : Integer;
+   callArgs : TData;
+   arg : TTypedExpr;
+begin
+   if exec.IsDebugging then
+      exec.Debugger.EnterFunc(exec, Self);
+   try
+      SetLength(callArgs, FArgs.Count);
+      for i:=0 to FArgs.Count-1 do begin
+         arg:=TTypedExpr(FArgs.List[i]);
+         arg.EvalAsVariant(exec, callArgs[i]);
+      end;
+      FConnectorFastCall.FastCall(FBaseExpr.Eval(exec), callArgs, result);
+   finally
+      if exec.IsDebugging then
+         exec.Debugger.LeaveFunc(exec, Self);
+   end;
+end;
+
 // GetDataPtr
 //
 procedure TConnectorCallExpr.GetDataPtr(exec : TdwsExecution; var result : IDataContext);
 begin
    result.AsVariant[0]:=Eval(exec);
-end;
-
-// GetSubExpr
-//
-function TConnectorCallExpr.GetSubExpr(i : Integer) : TExprBase;
-begin
-   if i=0 then
-      Result:=BaseExpr
-   else Result:=TExprBase(FArgs.List[i-1]);
 end;
 
 // IsWritable
@@ -328,11 +437,11 @@ begin
    Result:=FIsWritable;
 end;
 
-// GetSubExprCount
+// GetIsIndex
 //
-function TConnectorCallExpr.GetSubExprCount : Integer;
+function TConnectorCallExpr.GetIsIndex : Boolean;
 begin
-   Result:=FArgs.Count+1;
+   Result:=(ccfIsIndex in FFlags);
 end;
 
 // ------------------

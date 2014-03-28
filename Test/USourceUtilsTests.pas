@@ -203,7 +203,7 @@ var
    scriptPos : TScriptPos;
    i: Integer;
 const
-   sugg9count = 8;
+   sugg9count = 9;
    sugg9: array [0..sugg9count - 1] of String = (
      'TClass',
      'TComplex',
@@ -212,6 +212,7 @@ const
      'TRTTIRawAttribute',
      'TRTTIRawAttributes',
      'TRTTITypeInfo',
+     'TSourceCodeLocation',
      'TVector');
 begin
    prog:=FCompiler.Compile('Internal.PrintL');
@@ -240,6 +241,7 @@ begin
    CheckEquals(sugg9count, sugg.Count, 'column 9');
    for i := 0 to sugg9count - 1 do
       CheckEquals(sugg9[i], sugg.Code[i], Format('sugg 9, %d', [i]));
+   CheckEquals('TVector', sugg.Code[8], 'sugg 9, 8');
 end;
 
 // MetaClassTest
