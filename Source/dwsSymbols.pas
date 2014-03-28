@@ -968,6 +968,11 @@ type
       function NeedDirectReference : Boolean;
    end;
 
+   IConnectorFastCall = interface (IConnectorCall)
+      ['{64CE8F29-6FC3-4595-BB42-B7FDB84582C2}']
+      procedure FastCall(const base : Variant; const args : TData; var result : Variant);
+   end;
+
    IConnectorMember = interface (IGetSelf)
       ['{8D534D1C-4C6B-11D5-8DCB-0000216D9E86}']
       function Read(const base : Variant) : TData;
@@ -990,6 +995,7 @@ type
    IConnectorType = interface
      ['{8D534D1D-4C6B-11D5-8DCB-0000216D9E86}']
      function ConnectorCaption: UnicodeString;
+     function AutoVarParams : Boolean;
      function AcceptsParams(const params: TConnectorParamArray) : Boolean;
      function HasMethod(const MethodName: UnicodeString; const Params: TConnectorParamArray;
                         var TypSym: TTypeSymbol): IConnectorCall;
